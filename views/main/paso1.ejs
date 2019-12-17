@@ -1,0 +1,52 @@
+<p class="lead">Los estudiantes inscriptos previamente en cursos del Plan 1994 pueden
+   utilizar este formulario para solicitar inscripciones a materias en liceos
+   seleccionados.</p>
+
+<form method="post" action="/main/paso2">
+
+  <div class="card">
+    <div class="card-header">Identificación</div>
+    <div class="card-body">
+        <div class="form-group">
+          <label for="cedula">Número de cédula</label>
+          <input type="text" class="form-control" id="cedula" name="cedula" maxlength="11" value="<%= cedula %>" disabled="disabled">
+          <label for="nombre">Nombre</label>
+          <input type="text" class="form-control" id="nombre" value="<%= persona.PerNombreCompleto %>" disabled="disabled">
+        </div>
+    </div>
+  </div>
+
+  <div class="card mt-3">
+    <div class="card-header">Última inscripción a curso:</div>
+    <div class="card-body">
+        <div class="form-group">
+          <label for="cedula">Liceo</label>
+          <input type="text" class="form-control" id="liceo" value="<%= ultimaInscripcion.DependId ? ultimaInscripcion.DependId.DependDesc : '' %>" disabled="disabled">
+          <label for="plan">Plan</label>
+          <input type="text" class="form-control" id="plan" value="<%= ultimaInscripcion.PlanId ? ultimaInscripcion.PlanId.PlanNombre : '' %>" disabled="disabled">
+          <label for="ciclo">Ciclo</label>
+          <input type="text" class="form-control" id="ciclo" value="<%= ultimaInscripcion.CicloId ? ultimaInscripcion.CicloId.CicloDesc : '' %>" disabled="disabled">
+          <label for="grado">Grado</label>
+          <input type="text" class="form-control" id="grado" value="<%= ultimaInscripcion.GradoId ? ultimaInscripcion.GradoId.GradoDesc : '' %>" disabled="disabled">
+<% if (ultimaInscripcion.GradoId == 5) { %>
+          <label for="orientacion">Orientación</label>
+          <input type="text" class="form-control" id="orientacion" value="<%= ultimaInscripcion.OrientacionId ? ultimaInscripcion.OrientacionId.OrientacionDesc : '' %>" disabled="disabled">
+<% } %>
+<% if (ultimaInscripcion.GradoId == 6) { %>
+          <label for="opcion">Opción</label>
+          <input type="text" class="form-control" id="opcion" value="<%= ultimaInscripcion.OpcionId ? ultimaInscripcion.OpcionId.OpcionDesc : '' %>" disabled="disabled">
+<% } %>
+        </div>
+    </div>
+  </div>
+
+  <div class="card mt-3">
+    <div class="card-header">Inscripción a materias:</div>
+    <div class="card-body">
+
+      <input type="submit" name="submit" value="Buscar">
+
+    </div>
+  </div>
+
+</form>
