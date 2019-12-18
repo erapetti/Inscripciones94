@@ -2,7 +2,7 @@
    utilizar este formulario para solicitar inscripciones a materias en liceos
    seleccionados.</p>
 
-<form method="post" action="/main/paso2">
+<form method="post" action="<%= sails.config.custom.basePath %>/main/paso2">
 
   <div class="card">
     <div class="card-header">Identificación</div>
@@ -41,9 +41,17 @@
   </div>
 
   <div class="card mt-3">
-    <div class="card-header">Inscripción a materias:</div>
+    <div class="card-header">Selección de liceo:</div>
     <div class="card-body">
 
+      <p>Seleccione el liceo donde va a realizar la inscripción</p>
+
+      <label for="liceo">Liceo:</label>
+      <select class="custom-select" id="liceo" name="liceo">
+        <option selected>Elija un liceo...</option>
+        <option value="1">Montevideo 3</option>
+        <option value="2">Montevideo 26</option>
+      </select>
       <input type="submit" name="submit" value="Buscar">
 
     </div>

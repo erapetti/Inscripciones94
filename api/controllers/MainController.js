@@ -15,13 +15,13 @@ module.exports = {
                   | | | | | | (__| | (_) |
                   |_|_| |_|_|\___|_|\___/
 */
-	inicio: async function(req,res) {
+  inicio: async function(req,res) {
 
     let viewdata = {
       title: "Inscripciones Plan 1994",
     };
     return res.view(viewdata);
-	},
+  },
 
 /*                                      _
                   _ __   __ _ ___  ___ / |
@@ -36,7 +36,7 @@ module.exports = {
     if (!cedula) {
       return res.redirect('/');
     }
-		cedula = cedula.replace(/[.,;-]/g,'');
+    cedula = cedula.replace(/[.,;-]/g,'');
 
     let viewdata = {
       title: "Inscripciones Plan 1994",
@@ -49,21 +49,21 @@ module.exports = {
         throw new Error("El número de cédula ingresado no se encuentra registrado en nuestra base de datos. Verifique que lo escribió correctamente.")
       }
 
-			inscripciones = await Inscripciones.find({PerId:viewdata.persona.id, PlanId:14, EstadosInscriId:{'<':5}}).sort('FechaInicioCurso DESC').limit(1).populate('DependId').populate('PlanId').populate('CicloId').populate('GradoId').populate('OrientacionId').populate('OpcionId');
-			if (typeof inscripciones === "undefined") {
-				throw new Error("No tienes inscripciones previas en el Plan 1994. Debes realizar la inscripción personalmente en un liceo.");
-			}
+      inscripciones = await Inscripciones.find({PerId:viewdata.persona.id, PlanId:14, EstadosInscriId:{'<':5}}).sort('FechaInicioCurso DESC').limit(1).populate('DependId').populate('PlanId').populate('CicloId').populate('GradoId').populate('OrientacionId').populate('OpcionId');
+      if (typeof inscripciones === "undefined" || typeof inscripciones[0] === "undefined") {
+        throw new Error("No tienes inscripciones previas en el Plan 1994. Debes realizar la inscripción personalmente en un liceo.");
+      }
 
-			viewdata.ultimaInscripcion = inscripciones[0];
+      viewdata.ultimaInscripcion = inscripciones[0];
 
     } catch (e) {
       viewdata.mensaje = e.message;
       viewdata.persona = {};
-			viewdata.ultimaInscripcion = {};
+      viewdata.ultimaInscripcion = {};
     }
 
     return res.view(viewdata);
-	},
+  },
 
 };
 

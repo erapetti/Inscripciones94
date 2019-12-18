@@ -20,7 +20,7 @@ module.exports = {
           GradoId: { model: 'Grados' },
           OrientacionId: { model: 'Orientaciones' },
           OpcionId: { model: 'Opciones' },
-          FechaInicioCurso: { type:'string', columnType:'datetime' },
+          FechaInicioCurso: { type:'ref', columnType:'date' },
           InscriTurno: 'string',
   },
 
