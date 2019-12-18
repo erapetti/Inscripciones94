@@ -2,14 +2,16 @@
    utilizar este formulario para solicitar inscripciones a materias en liceos
    seleccionados.</p>
 
-<div class="card col-md-6">
-  <div class="card-body">
-    <form method="post" action="<%= sails.config.custom.basePath %>/main/paso1">
-      <div class="form-group">
-        <label for="cedula">Número de cédula</label>
-        <input type="text" class="form-control" id="cedula" name="cedula" maxlength="11">
-      </div>
-      <input type="submit" name="submit" value="Buscar">
-    </form>
+<form method="post" action="<%= sails.config.custom.basePath %>/main/paso1">
+
+  <div class="card">
+   <div class="card-header bg-primary text-white">Identificación</div>
+   <div class="card-body">
+       <div class="form-group">
+         <label for="cedula">Número de cédula</label>
+         <input type="text" class="form-control" id="cedula" name="cedula" maxlength="11">
+       </div>
+       <input type="submit" name="submit" class="btn btn-primary" value="Buscar">
+   </div>
   </div>
-</div>
+</form>

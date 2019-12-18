@@ -13,67 +13,68 @@ module.exports = {
   attributes: {
           id: { type:'number', columnName:'DependId', required:true },
           DependDesc: 'string',
-          DependNom: 'string',
+          DependNom: { type:'string', allowNull:true },
           StatusId: 'number',
   },
 
-  direccion: function(DependId, callback) {
-    return this.query(`
-      SELECT DependId,DeptoId,DeptoNombre,LugarId,LugarDesc,LocId,LocNombre,concat(DirViaNom,if(DirNroPuerta is null,'',concat(' ',DirNroPuerta)),if(DirKm is null,'',concat(' Km. ',DirKm)),if(DirViaNom1 is null,'',if(DirViaNom2 is null,concat(' esq. ',DirViaNom1),concat(' entre ',DirViaNom1,if(DirViaNom2 like 'i%' or DirViaNom2 like 'hi%',' e ',' y '),DirViaNom2)))) LugarDireccion
-      FROM DEPENDENCIAS d
-      JOIN DEPENDLUGAR USING (DependId)
-      JOIN LUGARES l USING (LugarId)
-      JOIN DEPARTAMENTO USING (DeptoId)
-      JOIN LOCALIDAD USING (DeptoId,LocId)
-      JOIN Direcciones.DIRECCIONES
-      ON LugarDirId=DirId
-      WHERE DependId = ?
-      AND d.StatusId=1
-      AND l.StatusId=1
-      AND DependLugarStatusId=1
-      LIMIT 1
-    `,
-    [DependId],
-    function(err,result){
-      if (err) {
-        return callback(err, undefined);
+  dependDesc: async function(dependId) {
+    const memkey = sails.config.prefix.dependDesc+dependId;
+    try {
+
+      const dependDesc = await sails.memcached.Get(memkey);
+      if (typeof dependDesc === 'undefined') {
+        throw 'CACHE MISS';
       }
-      if (result===null) {
-        return new Error("No se encuentra la dependencia",undefined);
-      }
-      return callback(undefined, (result===null ? undefined : result[0]));
-    });
+      return dependDesc;
+
+    } catch (e) {
+
+      const result = await this.findOne({id:dependId, StatusId:1});
+      const dependDesc = result ? result.DependDesc : undefined;
+      try {
+        await sails.memcached.Set(memkey, dependDesc, sails.config.memcachedTTL);
+      } catch (ignore) { }
+      return dependDesc;
+
+    }
   },
 
-  liceos: function(DeptoId, LocId, callback) {
-    return this.query(`
-      SELECT DependId,DependDesc,DependNom,DeptoId,DeptoNombre,LugarId,LugarDesc,LocId,LocNombre,concat(DirViaNom,if(DirNroPuerta is null,'',concat(' ',DirNroPuerta)),if(DirViaNom1 is null,'',if(DirViaNom2 is null,concat(' esq. ',DirViaNom1),concat(' entre ',DirViaNom1,if(DirViaNom2 like 'i%' or DirViaNom2 like 'hi%',' e ',' y '),DirViaNom2)))) LugarDireccion
-      FROM DEPENDENCIAS d
-      JOIN DEPENDLUGAR USING (DependId)
-      JOIN LUGARES l USING (LugarId)
-      JOIN DEPARTAMENTO USING (DeptoId)
-      JOIN LOCALIDAD USING (DeptoId,LocId)
-      JOIN Direcciones.DIRECCIONES
-      ON LugarDirId=DirId
-      WHERE DeptoId = ?
-      AND LocId = ?
-      AND DependTipId=2
-      AND DependSubTipId=1
-      AND d.StatusId=1
-      AND l.StatusId=1
-      AND DependLugarStatusId=1
-      AND DependId=LugarId
-      ORDER by DependId
-    `,
-    [DeptoId,LocId],
-    function(err,result){
-      if (err) {
-        return callback(err, undefined);
+  liceosConHorarios: async function(desde,hasta) {
+    const memkey = sails.config.prefix.liceosConHorarios+desde+hasta;
+    try {
+
+      const result = await sails.memcached.Get(memkey);
+      if (typeof result === 'undefined') {
+        throw 'CACHE MISS';
       }
-      if (result===null) {
-        return new Error("No se encuentran liceos en el departamento "+DeptoId,undefined);
+      return result;
+
+    } catch (e) {
+
+      const result = await this.getDatastore().sendNativeQuery(`
+        select DependId,DependDesc,DeptoId,DeptoNombre,group_concat(distinct TurnoId) Turnos
+        from Estudiantil.GRUPOMATERIA_HORARIOS
+        join DEPENDENCIAS D on DependId=LiceoPlanDependId
+        join LUGARES L on LugarId=DependId
+        join DEPARTAMENTO using (DeptoId)
+        where LiceoPlanPlanId = 14
+        and D.StatusId=1
+        and L.StatusId=1
+        and (IFNULL(GrupoMateriaHorarioFchDesde,'1000-01-01')='1000-01-01' OR GrupoMateriaHorarioFchDesde <= $1)
+        and (IFNULL(GrupoMateriaHorarioFchHasta,'1000-01-01')='1000-01-01' OR GrupoMateriaHorarioFchHasta >= $2)
+        group by 1,2,3,4
+        order by 4,2
+        `, [desde, hasta]);
+
+      if (result) {
+        try {
+          await sails.memcached.Set(memkey, result.rows, sails.config.memcachedTTL);
+        } catch (ignore) { }
+
+        return result.rows;
+      } else {
+        return undefined;
       }
-      return callback(undefined, (result===null ? undefined : result));
-    });
+    }
   },
 };

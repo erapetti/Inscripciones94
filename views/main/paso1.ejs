@@ -9,7 +9,8 @@
     <div class="card-body">
         <div class="form-group">
           <label for="cedula">Número de cédula</label>
-          <input type="text" class="form-control" id="cedula" name="cedula" maxlength="11" value="<%= cedula %>" disabled="disabled">
+          <input type="hidden" class="form-control" name="cedula" value="<%= cedula %>">
+          <input type="text" class="form-control" id="cedula" value="<%= cedula %>" disabled="disabled">
           <label for="nombre">Nombre</label>
           <input type="text" class="form-control" id="nombre" value="<%= persona.PerNombreCompleto %>" disabled="disabled">
         </div>
@@ -41,18 +42,18 @@
   </div>
 
   <div class="card mt-3">
-    <div class="card-header">Selección de liceo:</div>
+    <div class="card-header bg-primary text-white">Selección de liceo</div>
     <div class="card-body">
 
-      <p>Seleccione el liceo donde va a realizar la inscripción</p>
+      <p>Los siguientes liceos permiten la inscripción web:</p>
 
-      <label for="liceo">Liceo:</label>
-      <select class="custom-select" id="liceo" name="liceo">
-        <option selected>Elija un liceo...</option>
-        <option value="1">Montevideo 3</option>
-        <option value="2">Montevideo 26</option>
+      <select class="custom-select has-feedback" id="dependid" name="dependid" required>
+        <option selected disabled>Elija un liceo...</option>
+<% liceos.forEach(function(l) { -%>
+        <option value="<%= l.DependId %>"><%= l.DependDesc %></option>
+<% }) -%>
       </select>
-      <input type="submit" name="submit" value="Buscar">
+      <input type="submit" class="mt-3 btn btn-primary" name="submit" value="Ver grupos disponibles">
 
     </div>
   </div>

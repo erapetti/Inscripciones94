@@ -7,6 +7,13 @@
  * Ascii art: http://www.network-science.de/ascii/ font:"standard", reflection:no, adjustement:center, stretch:no, width:60
  */
 
+const util = require('util');
+const Memcached = require('memcached');
+sails.memcached = new Memcached(sails.config.memcached);
+sails.memcached.Get = util.promisify(sails.memcached.get);
+sails.memcached.Set = util.promisify(sails.memcached.set);
+
+
 module.exports = {
 
 /*                 _       _      _
@@ -56,15 +63,51 @@ module.exports = {
 
       viewdata.ultimaInscripcion = inscripciones[0];
 
+			const listaLiceosConHorarios = await Dependencias.liceosConHorarios('2019-04-01','2019-04-01');
+
+			if (listaLiceosConHorarios.length == 0) {
+					throw new Error("En este momento no hay liceos habilitados para realizar inscripciones. Reintente luego");
+			}
+			// filtro liceos piloto
+			viewdata.liceos = listaLiceosConHorarios.filter(l => (l.DependId == 1003 || l.DependId == 1026));
+
     } catch (e) {
       viewdata.mensaje = e.message;
       viewdata.persona = {};
       viewdata.ultimaInscripcion = {};
+			viewdata.liceos = {};
     }
 
     return res.view(viewdata);
   },
 
+/*                                    ____
+                 _ __   __ _ ___  ___|___ \
+                | '_ \ / _` / __|/ _ \ __) |
+                | |_) | (_| \__ \ (_) / __/
+                | .__/ \__,_|___/\___/_____|
+                |_|
+*/
+	paso2: async function(req,res) {
+		let cedula = req.param('cedula','').checkFormat(/[\d.,;-]+/);
+		if (!cedula) {
+			return res.redirect(sails.config.custom.basePath+'/');
+		}
+		cedula = cedula.replace(/[.,;-]/g,'');
+
+		const dependId = req.param('dependid').checkFormat(/\d+/);
+		if (!dependId) {
+			return res.redirect(sails.config.custom.basePath+'/');
+		}
+
+		let viewdata = {
+			title: "Inscripciones Plan 1994",
+			cedula: cedula,
+			dependId: dependId,
+			dependDesc: await Dependencias.dependDesc(dependId),
+		};
+		return res.view(viewdata);
+	},
 };
 
 /*                            _

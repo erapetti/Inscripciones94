@@ -1,0 +1,44 @@
+<p class="lead">Los estudiantes inscriptos previamente en cursos del Plan 1994 pueden
+   utilizar este formulario para solicitar inscripciones a materias en liceos
+   seleccionados.</p>
+
+<div class="card">
+  <div class="card-header">Identificación</div>
+  <div class="card-body">
+      <div class="form-group">
+        <label for="cedula">Número de cédula</label>
+        <input type="hidden" class="form-control" name="cedula" value="<%= cedula %>">
+        <input type="text" class="form-control" id="cedula" value="<%= cedula %>" disabled="disabled">
+      </div>
+  </div>
+</div>
+
+<div class="card mt-3">
+  <div class="card-header">Liceo seleccionado</div>
+  <div class="card-body">
+    <select class="custom-select has-feedback" id="dependid" name="dependid" disabled>
+      <option value="<%= dependId %>"><%= dependDesc %></option>
+    </select>
+  </div>
+</div>
+
+<div class="card mt-3">
+  <div class="card-header bg-primary text-white">Materias</div>
+  <div class="card-body">
+    <p>Agregue las materias que va a cursar</p>
+    <select class="custom-select has-feedback" id="asignatura" name="asignatura">
+      <option value="<%= dependId %>"><%= dependDesc %></option>
+    </select>
+  </div>
+</div>
+
+<form method="post" action="<%= sails.config.custom.basePath %>/main/paso2">
+
+  <div class="card mt-3">
+    <div class="card-header bg-success text-white">Horarios</div>
+    <div class="card-body">
+...
+    </div>
+  </div>
+
+</form>
