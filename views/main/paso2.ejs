@@ -26,15 +26,36 @@
   <div class="card-header bg-primary text-white">Materias</div>
   <div class="card-body">
     <p>Agregue las materias que va a cursar</p>
-    <select class="custom-select has-feedback" id="asignatura" name="asignatura">
-      <option value="<%= dependId %>"><%= dependDesc %></option>
+
+    <label for="grado">Grado</label>
+    <select class="custom-select has-feedback" id="grado" name="grado" onChange="updateCGOOA()">
+      <option selected disabled>Elija un grado...</option>
+      <option value="1">1º BD (4º)</option>
+      <option value="2">2º BD (5ª)</option>
+      <option value="3">3º BD (6º)</option>
     </select>
+
+    <label for="asignatura">Orientación</label>
+    <select class="custom-select has-feedback" id="orientacion" name="orientacion" onChange="updateCGOOA()">
+    </select>
+
+    <label for="asignatura">Opción</label>
+    <select class="custom-select has-feedback" id="opcion" name="opcion" onChange="updateCGOOA()">
+      <option selected disabled>Elija una opción...</option>
+    </select>
+
+    <label for="asignatura">Asignatura</label>
+    <select class="custom-select has-feedback" id="asignatura" name="asignatura" onchange="$('#verHorarios').prop('disabled',false)">
+    </select>
+
+    <button id='verHorarios' class="btn btn-primary mt-3" disabled="disabled">Ver horarios</button>
+
   </div>
 </div>
 
 <form method="post" action="<%= sails.config.custom.basePath %>/main/paso2">
 
-  <div class="card mt-3">
+  <div class="card mt-3 d-none">
     <div class="card-header bg-success text-white">Horarios</div>
     <div class="card-body">
 ...
@@ -42,3 +63,69 @@
   </div>
 
 </form>
+
+<script>
+var asignaturas = <%- JSON.stringify(asignaturas) %>;
+var orientaciones = [ {id:15,OrientacionDesc:'Humanístico'},{id:16,OrientacionDesc:'Biológico'},{id:17,OrientacionDesc:'Científico'} ];
+var opciones = [ {id:13,OpcionDesc:'Derecho'},{id:14,OpcionDesc:'Economía'},{id:15,OpcionDesc:'Agronomía'},{id:16,OpcionDesc:'Medicina'},{id:17,OpcionDesc:'Arquitectura'},{id:18,OpcionDesc:'Ingeniería'} ];
+
+function update_asignatura() {
+  var gradoId = $('#grado').val();
+  var orientacionId = $('#orientacion').val();
+  var opcionId = $('#opcion').val();
+  var options = [ '<option selected disabled>Elija una asignatura...</option>' ];
+  if (!gradoId || (gradoId!=1 && !(orientacionId || opcionId))) {
+    $('#asignatura').addClass('d-none');
+  } else {
+    asignaturas.forEach(function(a){
+      //console.log(orientacionId,opcionId,a.orientacionId,a.opcionId);
+      if (a.gradoId == gradoId && (!orientacionId || a.orientacionId == orientacionId) && (!opcionId || a.opcionId == opcionId)) {
+        options.push( '<option value='+a.id+'>'+a.AsignDesc+'</option>' );
+      }
+    });
+    $('#asignatura').html(options.join(''));
+    $('#asignatura').removeClass('d-none');
+  }
+};
+
+function update_orientacion() {
+  var gradoId = $('#grado').val();
+  var orientacionId = $('#orientacion').val();
+  if (gradoId != 2) {
+    $('#orientacion').addClass('d-none');
+    $('#orientacion').val(null);
+  } else {
+    var options = ['<option disabled>Elija una orientación...</option>'];
+    orientaciones.forEach(function(o) {
+      options.push( '<option value='+o.id+(orientacionId == o.id ? ' selected' :'')+'>'+o.OrientacionDesc+'</option>' );
+    });
+    $('#orientacion').html(options.join(''));
+    $('#orientacion').removeClass('d-none');
+  }
+};
+
+function update_opcion() {
+  var gradoId = $('#grado').val();
+  var opcionId = $('#opcion').val();
+  if (gradoId != 3) {
+    $('#opcion').addClass('d-none');
+    $('#opcion').val(null);
+  } else {
+    var options = ['<option disabled>Elija una opción...</option>'];
+    opciones.forEach(function(o) {
+      options.push( '<option value='+o.id+(opcionId == o.id ? ' selected' : '')+'>'+o.OpcionDesc+'</option>' );
+    });
+    $('#opcion').html(options.join(''));
+    $('#opcion').removeClass('d-none');
+  }
+};
+
+function updateCGOOA() {
+  update_orientacion();
+  update_opcion();
+  update_asignatura();
+}
+window.onload = function(){
+  updateCGOOA();
+};
+</script>

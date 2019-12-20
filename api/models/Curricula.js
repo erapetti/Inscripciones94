@@ -11,7 +11,7 @@ module.exports = {
   migrate: 'safe',
   tableName: 'CURRICULA',
   attributes: {
-          id: { type:'string', columnName:'Curricula_UsrUltAct', required:true }, //bogus
+          id: { type:'string', columnName:'Curricula_UsrUltAct', required:true }, //dummy
           CurriculaPlanId: 'number',
           Curricula_Ciclo: 'number',
           Curricula_Grado: 'number',

@@ -105,7 +105,9 @@ module.exports = {
 			cedula: cedula,
 			dependId: dependId,
 			dependDesc: await Dependencias.dependDesc(dependId),
+			asignaturas: await Asignaturas.asignaturasPlan(14),
 		};
+
 		return res.view(viewdata);
 	},
 };
