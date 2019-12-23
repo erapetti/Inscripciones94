@@ -45,6 +45,8 @@ module.exports = {
     }
     cedula = cedula.replace(/[.,;-]/g,'');
 
+		const fechaHorarios = calcFechaHorarios();
+
     let viewdata = {
       title: "Inscripciones Plan 1994",
       cedula: cedula,
@@ -63,19 +65,20 @@ module.exports = {
 
       viewdata.ultimaInscripcion = inscripciones[0];
 
-			const listaLiceosConHorarios = await Dependencias.liceosConHorarios('2019-04-01','2019-04-01');
+			const listaLiceosConHorarios = await Dependencias.liceosConHorarios(fechaHorarios, fechaHorarios);
 
-			if (listaLiceosConHorarios.length == 0) {
-					throw new Error("En este momento no hay liceos habilitados para realizar inscripciones. Reintente luego");
-			}
 			// filtro liceos piloto
 			viewdata.liceos = listaLiceosConHorarios.filter(l => (l.DependId == 1003 || l.DependId == 1026));
+
+			if (viewdata.liceos.length == 0) {
+					throw new Error("En este momento no hay liceos habilitados para realizar inscripciones. Reintente luego");
+			}
 
     } catch (e) {
       viewdata.mensaje = e.message;
       viewdata.persona = {};
       viewdata.ultimaInscripcion = {};
-			viewdata.liceos = {};
+			viewdata.liceos = [];
     }
 
     return res.view(viewdata);
@@ -100,12 +103,15 @@ module.exports = {
 			return res.redirect(sails.config.custom.basePath+'/');
 		}
 
+		const fechaHorarios = calcFechaHorarios();
+
 		let viewdata = {
 			title: "Inscripciones Plan 1994",
 			cedula: cedula,
 			dependId: dependId,
 			dependDesc: await Dependencias.dependDesc(dependId),
 			asignaturas: await Asignaturas.asignaturasPlan(14),
+			horarios: await Horarios.get(dependId,fechaHorarios)
 		};
 
 		return res.view(viewdata);
@@ -130,3 +136,16 @@ String.prototype.checkFormat = function(regexp) {
   }
   return (this.match(regexp) ? this.toString() : undefined);
 };
+
+// la fecha en que los horarios tienen que existir:
+function calcFechaHorarios() {
+	const mesActual = (new Date()).getMonth();
+	const anioActual = 2018; // (new Date()).getFullYear();
+	const fechaHorarios = (mesActual < 4 ? anioActual+'-04-01' :
+													mesActual < 6 ? anioActual+'-'+mesActual+'01' :
+													 mesActual < 8 ? anioActual+'-08-01' :
+														mesActual < 11 ? anioActual+'-'+mesActual+'01' :
+															(anioActual+1)+'-04-01'
+	);
+	return fechaHorarios;
+}

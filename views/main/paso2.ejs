@@ -35,21 +35,31 @@
       <option value="3">3º BD (6º)</option>
     </select>
 
-    <label for="asignatura">Orientación</label>
-    <select class="custom-select has-feedback" id="orientacion" name="orientacion" onChange="updateCGOOA()">
-    </select>
+    <div id="gOrientacion">
+      <label for="orientacion">Orientación</label>
+      <select class="custom-select has-feedback" id="orientacion" name="orientacion" onChange="updateCGOOA()">
+      </select>
+    </div>
 
-    <label for="asignatura">Opción</label>
-    <select class="custom-select has-feedback" id="opcion" name="opcion" onChange="updateCGOOA()">
-      <option selected disabled>Elija una opción...</option>
-    </select>
+    <div id="gOpcion">
+      <label for="opcion">Opción</label>
+      <select class="custom-select has-feedback" id="opcion" name="opcion" onChange="updateCGOOA()">
+      </select>
+    </div>
 
-    <label for="asignatura">Asignatura</label>
-    <select class="custom-select has-feedback" id="asignatura" name="asignatura" onchange="$('#verHorarios').prop('disabled',false)">
-    </select>
+    <div id="gAsignatura">
+      <label for="asignatura">Asignatura</label>
+      <select class="custom-select has-feedback" id="asignatura" name="asignatura" onchange="verHorarios()">
+      </select>
+    </div>
 
-    <button id='verHorarios' class="btn btn-primary mt-3" disabled="disabled">Ver horarios</button>
-
+    <table id="horarios" class="table mt-3 d-none">
+      <thead>
+        <tr><th>Materia</th><th>Grupo</th><th>Tipo</th><th>Duración</th><th>Horario</th><th class="d-print-none"></th></tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
   </div>
 </div>
 
@@ -67,7 +77,8 @@
 <script>
 var asignaturas = <%- JSON.stringify(asignaturas) %>;
 var orientaciones = [ {id:15,OrientacionDesc:'Humanístico'},{id:16,OrientacionDesc:'Biológico'},{id:17,OrientacionDesc:'Científico'} ];
-var opciones = [ {id:13,OpcionDesc:'Derecho'},{id:14,OpcionDesc:'Economía'},{id:15,OpcionDesc:'Agronomía'},{id:16,OpcionDesc:'Medicina'},{id:17,OpcionDesc:'Arquitectura'},{id:18,OpcionDesc:'Ingeniería'} ];
+var opciones = [ {id:13,OpcionDesc:'Derecho',OrientacionId:15},{id:14,OpcionDesc:'Economía',OrientacionId:15},{id:15,OpcionDesc:'Agronomía',OrientacionId:16},{id:16,OpcionDesc:'Medicina',OrientacionId:16},{id:17,OpcionDesc:'Arquitectura',OrientacionId:17},{id:18,OpcionDesc:'Ingeniería',OrientacionId:17} ];
+var horarios = <%- JSON.stringify(horarios) %>;
 
 function update_asignatura() {
   var gradoId = $('#grado').val();
@@ -75,7 +86,7 @@ function update_asignatura() {
   var opcionId = $('#opcion').val();
   var options = [ '<option selected disabled>Elija una asignatura...</option>' ];
   if (!gradoId || (gradoId!=1 && !(orientacionId || opcionId))) {
-    $('#asignatura').addClass('d-none');
+    $('#gAsignatura').addClass('d-none');
   } else {
     asignaturas.forEach(function(a){
       //console.log(orientacionId,opcionId,a.orientacionId,a.opcionId);
@@ -84,7 +95,7 @@ function update_asignatura() {
       }
     });
     $('#asignatura').html(options.join(''));
-    $('#asignatura').removeClass('d-none');
+    $('#gAsignatura').removeClass('d-none');
   }
 };
 
@@ -92,7 +103,7 @@ function update_orientacion() {
   var gradoId = $('#grado').val();
   var orientacionId = $('#orientacion').val();
   if (gradoId != 2) {
-    $('#orientacion').addClass('d-none');
+    $('#gOrientacion').addClass('d-none');
     $('#orientacion').val(null);
   } else {
     var options = ['<option disabled>Elija una orientación...</option>'];
@@ -100,7 +111,7 @@ function update_orientacion() {
       options.push( '<option value='+o.id+(orientacionId == o.id ? ' selected' :'')+'>'+o.OrientacionDesc+'</option>' );
     });
     $('#orientacion').html(options.join(''));
-    $('#orientacion').removeClass('d-none');
+    $('#gOrientacion').removeClass('d-none');
   }
 };
 
@@ -108,23 +119,40 @@ function update_opcion() {
   var gradoId = $('#grado').val();
   var opcionId = $('#opcion').val();
   if (gradoId != 3) {
-    $('#opcion').addClass('d-none');
+    $('#gOpcion').addClass('d-none');
     $('#opcion').val(null);
   } else {
     var options = ['<option disabled>Elija una opción...</option>'];
     opciones.forEach(function(o) {
-      options.push( '<option value='+o.id+(opcionId == o.id ? ' selected' : '')+'>'+o.OpcionDesc+'</option>' );
+      options.push( '<option value='+o.id+(opcionId == o.id ? ' selected' : '')+' data-orientacion="'+o.OrientacionId+'">'+o.OpcionDesc+'</option>' );
     });
     $('#opcion').html(options.join(''));
-    $('#opcion').removeClass('d-none');
+    $('#gOpcion').removeClass('d-none');
   }
 };
 
 function updateCGOOA() {
+  $('#horarios').addClass('d-none');
   update_orientacion();
   update_opcion();
   update_asignatura();
-}
+};
+
+function verHorarios() {
+  var asignId = $('#asignatura').val();
+  var orientacionId = $('#orientacion').val();
+  var opcionId = $('#opcion').val();
+
+  var body = [];
+  horarios.forEach(function(h) {
+    if (h.AsignId == asignId && (!orientacionId || h.OrientacionId == orientacionId) && (!opcionId || h.OpcionId == opcionId)) {
+      body.push( '<tr><td>'+h.MateriaNombre+'</td><td>'+h.GrupoMateriaDesc+'</td><td>'+h.TipoDictadoDesc+'</td><td>'+h.TipoDuracionDesc+'</td><td></td><td class="d-print-none"><button class="btn btn-primary">Agregar</button></td></tr>' );
+    }
+  });
+  $('#horarios tbody').html(body.join(''));
+  $('#horarios').removeClass('d-none');
+};
+
 window.onload = function(){
   updateCGOOA();
 };
