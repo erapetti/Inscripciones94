@@ -26,6 +26,7 @@ module.exports = {
 
     let viewdata = {
       title: "Inscripciones Plan 1994",
+      id: "inicio",
     };
     return res.view(viewdata);
   },
@@ -49,6 +50,7 @@ module.exports = {
 
     let viewdata = {
       title: "Inscripciones Plan 1994",
+      id: "paso1",
       cedula: cedula,
     };
     try {
@@ -107,11 +109,12 @@ module.exports = {
 
 		let viewdata = {
 			title: "Inscripciones Plan 1994",
+      id: "paso2",
 			cedula: cedula,
 			dependId: dependId,
 			dependDesc: await Dependencias.dependDesc(dependId),
 			asignaturas: await Asignaturas.asignaturasPlan(14),
-			horarios: await Horarios.get(dependId,fechaHorarios)
+			horarios: await Horarios.get(dependId, fechaHorarios)
 		};
 
 		return res.view(viewdata);
@@ -140,7 +143,7 @@ String.prototype.checkFormat = function(regexp) {
 // la fecha en que los horarios tienen que existir:
 function calcFechaHorarios() {
 	const mesActual = (new Date()).getMonth();
-	const anioActual = 2018; // (new Date()).getFullYear();
+	const anioActual = 2019; // (new Date()).getFullYear();
 	const fechaHorarios = (mesActual < 4 ? anioActual+'-04-01' :
 													mesActual < 6 ? anioActual+'-'+mesActual+'01' :
 													 mesActual < 8 ? anioActual+'-08-01' :

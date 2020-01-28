@@ -8,7 +8,7 @@
       <div class="form-group">
         <label for="cedula">Número de cédula</label>
         <input type="hidden" class="form-control" name="cedula" value="<%= cedula %>">
-        <input type="text" class="form-control" id="cedula" value="<%= cedula %>" disabled="disabled">
+        <input type="text" class="form-control" id="cedula" value="<%= cedula %>" disabled>
       </div>
   </div>
 </div>
@@ -25,7 +25,7 @@
 <div class="card mt-3">
   <div class="card-header bg-primary text-white">Materias</div>
   <div class="card-body">
-    <p>Agregue las materias que va a cursar</p>
+    <p>Seleccione el grado y asignatura para acceder a los horarios de los grupos:</p>
 
     <label for="grado">Grado</label>
     <select class="custom-select has-feedback" id="grado" name="grado" onChange="updateCGOOA()">
@@ -55,7 +55,7 @@
 
     <table id="horarios" class="table mt-3 d-none">
       <thead>
-        <tr><th>Materia</th><th>Grupo</th><th>Tipo</th><th>Duración</th><th>Horario</th><th class="d-print-none"></th></tr>
+        <tr><th>Materia</th><th>Grupo</th><th>Tipo</th><th>Duración</th><th>Horarios</th><th class="d-print-none"></th></tr>
       </thead>
       <tbody>
       </tbody>
@@ -65,12 +65,22 @@
 
 <form method="post" action="<%= sails.config.custom.basePath %>/main/paso2">
 
-  <div class="card mt-3 d-none">
-    <div class="card-header bg-success text-white">Horarios</div>
+  <div class="card mt-3">
+    <div class="card-header bg-success text-white">Tus horarios</div>
     <div class="card-body">
-...
+      Al agregar materias iremos mostrando cómo quedan tus horarios.
+
+      <table id="misHorarios" class="table mt-3 d-none">
+        <thead>
+          <tr><th>Materia</th><th>Grupo</th><th>Tipo</th><th>Duración</th><th>Horarios</th><th class="d-print-none"></th></tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
     </div>
   </div>
+
+  <input type="submit" value="Anotarse a las materias" disabled class="mt-3 mb-3">
 
 </form>
 
@@ -79,6 +89,7 @@ var asignaturas = <%- JSON.stringify(asignaturas) %>;
 var orientaciones = [ {id:15,OrientacionDesc:'Humanístico'},{id:16,OrientacionDesc:'Biológico'},{id:17,OrientacionDesc:'Científico'} ];
 var opciones = [ {id:13,OpcionDesc:'Derecho',OrientacionId:15},{id:14,OpcionDesc:'Economía',OrientacionId:15},{id:15,OpcionDesc:'Agronomía',OrientacionId:16},{id:16,OpcionDesc:'Medicina',OrientacionId:16},{id:17,OpcionDesc:'Arquitectura',OrientacionId:17},{id:18,OpcionDesc:'Ingeniería',OrientacionId:17} ];
 var horarios = <%- JSON.stringify(horarios) %>;
+var misHorarios = [];
 
 function update_asignatura() {
   var gradoId = $('#grado').val();
@@ -139,18 +150,39 @@ function updateCGOOA() {
 };
 
 function verHorarios() {
+  var gradoId = $('#grado').val();
   var asignId = $('#asignatura').val();
   var orientacionId = $('#orientacion').val();
   var opcionId = $('#opcion').val();
 
   var body = [];
   horarios.forEach(function(h) {
-    if (h.AsignId == asignId && (!orientacionId || h.OrientacionId == orientacionId) && (!opcionId || h.OpcionId == opcionId)) {
-      body.push( '<tr><td>'+h.MateriaNombre+'</td><td>'+h.GrupoMateriaDesc+'</td><td>'+h.TipoDictadoDesc+'</td><td>'+h.TipoDuracionDesc+'</td><td></td><td class="d-print-none"><button class="btn btn-primary">Agregar</button></td></tr>' );
+    if (h.GradoId == gradoId && (!orientacionId || h.OrientacionId == orientacionId) && (!opcionId || h.OpcionId == opcionId) && h.AsignId == asignId) {
+      body.push( '<tr'+(misHorarios.find(function(m){return m.id==h.id}) ? ' class="disabled"' : '')+'><td>'+h.MateriaNombre+'</td><td>'+h.GrupoMateriaDesc+'<br>('+h.id+')</td><td>'+h.TipoDictadoDesc+'</td><td>'+h.TipoDuracionDesc+'</td><td>'+h.Horarios.replace(/,/g,'<br>')+'</td><td class="d-print-none"><button class="btn btn-primary" data-id='+h.id+'>Agregar</button></td></tr>' );
     }
   });
+
   $('#horarios tbody').html(body.join(''));
   $('#horarios').removeClass('d-none');
+  $('#horarios button').click(agregarHorario);
+  $(window).scrollTop($('#horarios').offset().top);
+};
+
+function agregarHorario() {
+  const id = $(this).data('id');
+  misHorarios.push( horarios.find(function(h) { return h.id == id }) );
+  verHorarios();
+  verMisHorarios();
+};
+
+function verMisHorarios() {
+  var body = [];
+  misHorarios.forEach(function(m) {
+    body.push( '<tr><td>'+m.MateriaNombre+'</td><td>'+m.GrupoMateriaDesc+'<br>('+m.id+')</td><td>'+m.TipoDictadoDesc+'</td><td>'+m.TipoDuracionDesc+'</td><td>'+m.Horarios.replace(/,/g,'<br>')+'</td><td class="d-print-none"><button class="btn btn-danger" data-id='+m.id+'>Sacar</button></td></tr>' );
+  });
+  $('#misHorarios tbody').html(body.join(''));
+  $('#misHorarios').removeClass('d-none');
+  $(window).scrollTop($('#misHorarios').offset().top);
 };
 
 window.onload = function(){

@@ -11,11 +11,12 @@
     <link rel="stylesheet" href="/styles/datatables/dataTables.bootstrap4.css">
     <link rel="stylesheet" href="/styles/datatables/dataTables.bootstrap4.min.css">
     <link rel="stylesheet" href="/styles/importer.css">
+    <link rel="stylesheet" href="/styles/inscripciones.css">
     <link rel="stylesheet" href="/styles/roboto/roboto-fontface.css">
     <!--STYLES END-->
   </head>
 
-  <body class="p-3">
+  <body class="p-3" id="<%= id %>">
     <h1><% if (typeof title !== 'undefined') { %><%= title %><% } %></h1>
 
     <% if (typeof mensaje !== "undefined") { -%>
