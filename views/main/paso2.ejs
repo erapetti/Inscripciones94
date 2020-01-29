@@ -53,36 +53,39 @@
       </select>
     </div>
 
-    <table id="horarios" class="table mt-3 d-none">
-      <thead>
-        <tr><th>Materia</th><th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th><th class="d-print-none"></th></tr>
-      </thead>
-      <tbody>
-      </tbody>
-    </table>
   </div>
 </div>
+
+<table id="horarios" class="table mt-3 d-none">
+  <thead>
+    <tr><th>Materia</th><th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th><th class="d-print-none"></th></tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
 
 <form method="post" action="<%= sails.config.custom.basePath %>/main/paso2">
 
   <div class="card mt-3">
-    <div class="card-header bg-success text-white">Tus horarios</div>
+    <div class="card-header bg-success text-white">Propuesta de horarios</div>
     <div class="card-body">
-      Al agregar materias iremos mostrando los horarios seleccionados.
+      <p>Al agregar materias iremos mostrando los horarios seleccionados.</p>
 
-      <table id="misHorarios" class="table mt-3 d-none">
-        <thead>
-          <tr><th>Materia</th><th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th><th class="d-print-none"></th></tr>
-        </thead>
-        <tbody>
-        </tbody>
-      </table>
+      <p>Cuando elijas todas las materias puedes realizar la inscripción a los cursos.</p>
     </div>
   </div>
 
+  <table id="misHorarios" class="table mt-3 d-none">
+    <thead>
+      <tr><th>Materia</th><th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th><th class="d-print-none"></th></tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
+
   <div class="alert alert-danger mt-3 mb-0 d-none" id="mensaje"></div>
 
-  <button class="btn btn-primary mt-3 mb-3" id="anotarse" disabled>Anotarse a las materias</button>
+  <button class="btn btn-primary mt-3 mb-3" id="inscribirse" disabled>Inscribirse a los cursos seleccionados</button>
 
 </form>
 
@@ -153,7 +156,7 @@ function updateCGOOA() {
 
 function formatoHorario(horario, disabled, btnClass, btnText) {
   var html = '<tr'+(disabled ? ' class="disabled"' : '')+'>';
-  html += '<td>'+horario.MateriaNombre+'<br>'+horario.TipoDictadoDesc+'<br>'+horario.TipoDuracionDesc+'<br>('+horario.id+')</td>';
+  html += '<td>'+horario.MateriaNombre+'<br>'+horario.TipoDictadoDesc+'<br>'+horario.TipoDuracionDesc+'<br><small>('+horario.id+')</small></td>';
 
   var arrHorarios = {'LUN':[],'MAR':[],'MIE':[],'JUE':[],'VIE':[]};
   horario.Horarios.split(/,/).forEach(function(hd) {
@@ -177,7 +180,7 @@ function verHorarios() {
   var body = [];
   horarios.forEach(function(h) {
     var conQuienSolapa = solapada(h.Horarios, misHorarios);
-    var disabled = misHorarios.find(function(m){return m.MateriaId==h.MateriaId && m.TipoDictadoDesc==h.TipoDictadoDesc}) ? 'ya agregada' : conQuienSolapa.length>0 ? 'se solapa con '+conQuienSolapa.join(',') : undefined;
+    var disabled = misHorarios.find(function(m){return m.MateriaId==h.MateriaId && m.TipoDictadoDesc==h.TipoDictadoDesc}) ? 'ya agregada' : conQuienSolapa.length>0 ? 'se solapa con '+conQuienSolapa.join(', ') : undefined;
     if (h.GradoId == gradoId && (!orientacionId || h.OrientacionId == orientacionId) && (!opcionId || h.OpcionId == opcionId) && h.AsignId == asignId) {
       body.push( formatoHorario(h, disabled, 'btn-primary', 'Agregar') );
     }
@@ -190,7 +193,6 @@ function verHorarios() {
 };
 
 function solapada(strHorarios, misHorarios) {
-  
   var solapado = {};
 
   misHorarios.forEach(function(m) {
@@ -239,27 +241,34 @@ function verMisHorarios() {
 };
 
 function validar(misHorarios) {
-
   var error = [];
+  var cantHoras = 0;
 
   // valido que cada práctico tenga su teórico:
   var materias = { 'Teórico':{}, 'Práctico':{} };
   misHorarios.forEach(function(m) {
     materias[m.TipoDictadoDesc][m.MateriaNombre] = 1;
+    console.log(m.Horarios);
+    cantHoras += m.Horarios.split(/,/).length;
   });
   for (var materia in materias['Práctico']) {
     if (typeof materias['Teórico'][materia] === 'undefined') {
-      error.push( 'Falta agregar un teórico de '+materia );
+      error.push('Falta agregar un teórico de '+materia);
     }
+  }
+
+  if (cantHoras > 38) {
+    error.push('Has superado el tope de 38 horas de clase');
   }
 
   // muestro un mensaje con el resultado de la validación
   mensaje(error.join('<br>'));
 
-console.log(misHorarios.length);
-console.log(error.length);
+console.log('horarios',misHorarios.length);
+console.log('cantHoras',cantHoras);
+console.log('errores',error.length);
 
-  $('#anotarse').attr('disabled', (misHorarios.length>0 && error.length == 0 ? null : 'disabled'));
+  $('#inscribirse').attr('disabled', (misHorarios.length>0 && error.length == 0 ? null : 'disabled'));
 };
 
 function mensaje(texto) {
