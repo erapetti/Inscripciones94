@@ -39,6 +39,7 @@ module.exports = {
                GrupoMateriaDesc,
                TipoDictadoDesc,
                TipoDuracionDesc,
+               MateriaId,
                MateriaNombre,
                group_concat(HorarioDiaSemana,
                             ' ',
@@ -65,7 +66,7 @@ module.exports = {
           and LiceoPlanPlanId = 14
           and LiceoPlanDependId = $1
           and Curricula_Ciclo = 2
-        group by 1,2,3,4,5,6,7,8,9
+        group by 1,2,3,4,5,6,7,8,9,10
       `,[dependId, fechaHorarioActivo, desdeGM]);
 
       if (!result) {

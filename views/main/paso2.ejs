@@ -55,7 +55,7 @@
 
     <table id="horarios" class="table mt-3 d-none">
       <thead>
-        <tr><th>Materia</th><th>Grupo</th><th>Tipo</th><th>Duración</th><th>Horarios</th><th class="d-print-none"></th></tr>
+        <tr><th>Materia</th><th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th><th class="d-print-none"></th></tr>
       </thead>
       <tbody>
       </tbody>
@@ -68,11 +68,11 @@
   <div class="card mt-3">
     <div class="card-header bg-success text-white">Tus horarios</div>
     <div class="card-body">
-      Al agregar materias iremos mostrando cómo quedan tus horarios.
+      Al agregar materias iremos mostrando los horarios seleccionados.
 
       <table id="misHorarios" class="table mt-3 d-none">
         <thead>
-          <tr><th>Materia</th><th>Grupo</th><th>Tipo</th><th>Duración</th><th>Horarios</th><th class="d-print-none"></th></tr>
+          <tr><th>Materia</th><th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th><th class="d-print-none"></th></tr>
         </thead>
         <tbody>
         </tbody>
@@ -80,7 +80,9 @@
     </div>
   </div>
 
-  <input type="submit" value="Anotarse a las materias" disabled class="mt-3 mb-3">
+  <div class="alert alert-danger mt-3 mb-0 d-none" id="mensaje"></div>
+
+  <button class="btn btn-primary mt-3 mb-3" id="anotarse" disabled>Anotarse a las materias</button>
 
 </form>
 
@@ -149,6 +151,23 @@ function updateCGOOA() {
   update_asignatura();
 };
 
+function formatoHorario(horario, disabled, btnClass, btnText) {
+  var html = '<tr'+(disabled ? ' class="disabled"' : '')+'>';
+  html += '<td>'+horario.MateriaNombre+'<br>'+horario.TipoDictadoDesc+'<br>'+horario.TipoDuracionDesc+'<br>('+horario.id+')</td>';
+
+  var arrHorarios = {'LUN':[],'MAR':[],'MIE':[],'JUE':[],'VIE':[]};
+  horario.Horarios.split(/,/).forEach(function(hd) {
+    arrHorarios[hd.substr(0,3)].push( hd.substr(4) );
+  });
+  for (d in arrHorarios) {
+    html += '<td>'+arrHorarios[d].join('<br>')+'</td>';
+  }
+
+  html += '<td class="d-print-none">'+(disabled ? '('+disabled+')' : '<button class="btn '+btnClass+'" data-id='+horario.id+'>'+btnText+'</button>')+'</td>';
+  html += '</tr>';
+  return html;
+};
+
 function verHorarios() {
   var gradoId = $('#grado').val();
   var asignId = $('#asignatura').val();
@@ -157,8 +176,10 @@ function verHorarios() {
 
   var body = [];
   horarios.forEach(function(h) {
+    var conQuienSolapa = solapada(h.Horarios, misHorarios);
+    var disabled = misHorarios.find(function(m){return m.MateriaId==h.MateriaId && m.TipoDictadoDesc==h.TipoDictadoDesc}) ? 'ya agregada' : conQuienSolapa.length>0 ? 'se solapa con '+conQuienSolapa.join(',') : undefined;
     if (h.GradoId == gradoId && (!orientacionId || h.OrientacionId == orientacionId) && (!opcionId || h.OpcionId == opcionId) && h.AsignId == asignId) {
-      body.push( '<tr'+(misHorarios.find(function(m){return m.id==h.id}) ? ' class="disabled"' : '')+'><td>'+h.MateriaNombre+'</td><td>'+h.GrupoMateriaDesc+'<br>('+h.id+')</td><td>'+h.TipoDictadoDesc+'</td><td>'+h.TipoDuracionDesc+'</td><td>'+h.Horarios.replace(/,/g,'<br>')+'</td><td class="d-print-none"><button class="btn btn-primary" data-id='+h.id+'>Agregar</button></td></tr>' );
+      body.push( formatoHorario(h, disabled, 'btn-primary', 'Agregar') );
     }
   });
 
@@ -168,9 +189,34 @@ function verHorarios() {
   $(window).scrollTop($('#horarios').offset().top);
 };
 
+function solapada(strHorarios, misHorarios) {
+  
+  var solapado = {};
+
+  misHorarios.forEach(function(m) {
+    m.Horarios.split(/,/).forEach(function(hd) {
+      if (strHorarios.indexOf(hd)>-1) {
+        solapado[m.MateriaNombre] = 1;
+      }
+    });
+  });
+  return Object.keys(solapado);
+};
+
 function agregarHorario() {
-  const id = $(this).data('id');
+  var id = $(this).data('id');
   misHorarios.push( horarios.find(function(h) { return h.id == id }) );
+  verHorarios();
+  verMisHorarios();
+};
+
+function sacarHorario() {
+  var id = $(this).data('id');
+  for (var i=0; i<misHorarios.length; i++) {
+    if (misHorarios[i].id == id) {
+      misHorarios.splice(i, 1);
+    }
+  }
   verHorarios();
   verMisHorarios();
 };
@@ -178,11 +224,51 @@ function agregarHorario() {
 function verMisHorarios() {
   var body = [];
   misHorarios.forEach(function(m) {
-    body.push( '<tr><td>'+m.MateriaNombre+'</td><td>'+m.GrupoMateriaDesc+'<br>('+m.id+')</td><td>'+m.TipoDictadoDesc+'</td><td>'+m.TipoDuracionDesc+'</td><td>'+m.Horarios.replace(/,/g,'<br>')+'</td><td class="d-print-none"><button class="btn btn-danger" data-id='+m.id+'>Sacar</button></td></tr>' );
+    body.push( formatoHorario(m, false, 'btn-danger', 'Sacar') );
   });
   $('#misHorarios tbody').html(body.join(''));
-  $('#misHorarios').removeClass('d-none');
+  if (misHorarios.length > 0) {
+    $('#misHorarios').removeClass('d-none');
+  } else {
+    $('#misHorarios').addClass('d-none');
+  }
+  $('#misHorarios button').click(sacarHorario);
   $(window).scrollTop($('#misHorarios').offset().top);
+
+  validar(misHorarios);
+};
+
+function validar(misHorarios) {
+
+  var error = [];
+
+  // valido que cada práctico tenga su teórico:
+  var materias = { 'Teórico':{}, 'Práctico':{} };
+  misHorarios.forEach(function(m) {
+    materias[m.TipoDictadoDesc][m.MateriaNombre] = 1;
+  });
+  for (var materia in materias['Práctico']) {
+    if (typeof materias['Teórico'][materia] === 'undefined') {
+      error.push( 'Falta agregar un teórico de '+materia );
+    }
+  }
+
+  // muestro un mensaje con el resultado de la validación
+  mensaje(error.join('<br>'));
+
+console.log(misHorarios.length);
+console.log(error.length);
+
+  $('#anotarse').attr('disabled', (misHorarios.length>0 && error.length == 0 ? null : 'disabled'));
+};
+
+function mensaje(texto) {
+  $('#mensaje').html( texto );
+  if ( typeof texto !== 'undefined' && texto !== '' ) {
+    $('#mensaje').removeClass('d-none');
+  } else {
+    $('#mensaje').addClass('d-none');
+  }
 };
 
 window.onload = function(){
