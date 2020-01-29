@@ -1,5 +1,5 @@
 label { margin: 1rem 0 .5rem 0 }
 
 #paso2 tr.disabled td { color:#666 }
-#paso2 table#misHorarios td { white-space:nowrap }
-#paso2 table#horarios td { white-space:nowrap }
+#paso2 #misHorarios td { white-space:nowrap }
+#paso2 #horarios td { white-space:nowrap }

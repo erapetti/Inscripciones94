@@ -112,13 +112,48 @@ module.exports = {
       id: "paso2",
 			cedula: cedula,
 			dependId: dependId,
-			dependDesc: await Dependencias.dependDesc(dependId),
-			asignaturas: await Asignaturas.asignaturasPlan(14),
-			horarios: await Horarios.get(dependId, fechaHorarios)
-		};
+      dependDesc: '',
+      asignaturas: [],
+      horarios: [],
+    };
+
+    try {
+			viewdata.dependDesc = await Dependencias.dependDesc(dependId);
+			viewdata.asignaturas = await Asignaturas.asignaturasPlan(14);
+			viewdata.horarios = await Horarios.get(dependId, fechaHorarios);
+
+    } catch (e) {
+      viewdata.mensaje = e.message;
+    }
 
 		return res.view(viewdata);
 	},
+
+  paso3: async function(req,res) {
+    const cedula = req.param('cedula','').checkFormat(/[\d.,;-]+/);
+    const dependId = req.param('dependid').checkFormat(/\d+/);
+    const gm = req.param('gm').checkFormat(/[\d,]+/);
+    if (!cedula || !dependId || !gm) {
+      return res.redirect(sails.config.custom.basePath+'/');
+    }
+
+    let viewdata = {
+      title: "Inscripciones Plan 1994",
+      id: "paso3",
+      cedula: cedula,
+      dependId: dependId,
+      gm: gm,
+    };
+
+    try {
+
+    } catch (e) {
+      viewdata.mensaje = e.message;
+    }
+
+    return res.view(viewdata);
+  },
+
 };
 
 /*                            _

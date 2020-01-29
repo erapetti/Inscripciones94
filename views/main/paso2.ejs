@@ -7,7 +7,6 @@
   <div class="card-body">
       <div class="form-group">
         <label for="cedula">Número de cédula</label>
-        <input type="hidden" class="form-control" name="cedula" value="<%= cedula %>">
         <input type="text" class="form-control" id="cedula" value="<%= cedula %>" disabled>
       </div>
   </div>
@@ -25,7 +24,7 @@
 <div class="card mt-3">
   <div class="card-header bg-primary text-white">Materias</div>
   <div class="card-body">
-    <p>Seleccione el grado y asignatura para acceder a los horarios de los grupos:</p>
+    <p>Seleccione el grado y asignatura para acceder a los horarios:</p>
 
     <label for="grado">Grado</label>
     <select class="custom-select has-feedback" id="grado" name="grado" onChange="updateCGOOA()">
@@ -53,40 +52,47 @@
       </select>
     </div>
 
+    <div class="table-responsive my-3 d-none" id="horarios">
+      <label>Horarios de los grupos disponibles:</label>
+      <table class="table">
+        <thead>
+          <tr><th>Materia</th><th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th><th class="d-print-none"></th></tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+
   </div>
 </div>
 
-<table id="horarios" class="table mt-3 d-none">
-  <thead>
-    <tr><th>Materia</th><th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th><th class="d-print-none"></th></tr>
-  </thead>
-  <tbody>
-  </tbody>
-</table>
 
-<form method="post" action="<%= sails.config.custom.basePath %>/main/paso2">
+<div class="card mt-3">
+  <div class="card-header bg-success text-white">Propuesta de horarios</div>
+  <div class="card-body">
+    <p>Al agregar materias iremos mostrando los horarios seleccionados.</p>
 
-  <div class="card mt-3">
-    <div class="card-header bg-success text-white">Propuesta de horarios</div>
-    <div class="card-body">
-      <p>Al agregar materias iremos mostrando los horarios seleccionados.</p>
-
-      <p>Cuando elijas todas las materias puedes realizar la inscripción a los cursos.</p>
+    <div class="table-responsive d-none my-3" id="misHorarios">
+      <table class="table">
+        <thead>
+          <tr><th>Materia</th><th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th><th class="d-print-none"></th></tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
     </div>
+
+    <p>Cuando elijas todas las materias puedes realizar la inscripción a los cursos.</p>
   </div>
+</div>
 
-  <table id="misHorarios" class="table mt-3 d-none">
-    <thead>
-      <tr><th>Materia</th><th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th><th class="d-print-none"></th></tr>
-    </thead>
-    <tbody>
-    </tbody>
-  </table>
+<div class="alert alert-danger mt-3 mb-0 d-none" id="mensaje"></div>
 
-  <div class="alert alert-danger mt-3 mb-0 d-none" id="mensaje"></div>
-
-  <button class="btn btn-primary mt-3 mb-3" id="inscribirse" disabled>Inscribirse a los cursos seleccionados</button>
-
+<form method="post" action="<%= sails.config.custom.basePath %>/main/paso3">
+  <input type="hidden" name="cedula" value="<%= cedula %>">
+  <input type="hidden" name="dependid" value="<%= dependId %>">
+  <input type="hidden" name="gm" id="gm">
+  <button type="submit" class="btn btn-primary mt-3 mb-3" id="inscribirse" disabled>Inscribirse a los cursos seleccionados</button>
 </form>
 
 <script>
@@ -248,7 +254,6 @@ function validar(misHorarios) {
   var materias = { 'Teórico':{}, 'Práctico':{} };
   misHorarios.forEach(function(m) {
     materias[m.TipoDictadoDesc][m.MateriaNombre] = 1;
-    console.log(m.Horarios);
     cantHoras += m.Horarios.split(/,/).length;
   });
   for (var materia in materias['Práctico']) {
@@ -264,11 +269,8 @@ function validar(misHorarios) {
   // muestro un mensaje con el resultado de la validación
   mensaje(error.join('<br>'));
 
-console.log('horarios',misHorarios.length);
-console.log('cantHoras',cantHoras);
-console.log('errores',error.length);
-
   $('#inscribirse').attr('disabled', (misHorarios.length>0 && error.length == 0 ? null : 'disabled'));
+  $('#gm').val(misHorarios.map(function(m){return m.id}).join(','));
 };
 
 function mensaje(texto) {
