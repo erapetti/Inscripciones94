@@ -11,15 +11,12 @@ module.exports = {
   migrate: 'safe',
   tableName: 'GRUPOMATERIA_HORARIOS',
   attributes: {
-          id: { type:'number', columnName:'GrupoMateriaHorarioId', required:true },
+          id: { type:'number', columnName:'GrupoMateriaHorarioId', required:true },//dummy
   },
 
-  get: async function(dependId,fechaHorarioActivo) {
+  get: async function(dependId,fechaInicioCurso) {
 
-    const hoy = new Date();
-    const anio = fechaHorarioActivo.substr(0,4);
-    const desdeGM = (hoy.getMonth() < 5 ? anio+'-03-01' : (hoy.getMonth() < 10 ? anio+'-07-01' : (anio+1)+'-03-01'));
-    const memkey = sails.config.prefix.horarias+dependId+','+fechaHorarioActivo+','+desdeGM;
+    const memkey = sails.config.prefix.horarias+dependId+':'+fechaInicioCurso;
     try {
 
       const result = await sails.memcached.Get(memkey);
@@ -56,10 +53,11 @@ module.exports = {
         join ASIGNATURAS_MATERIAS on MateriaId=GrupoMateriaMateriaId
         join MATERIAS USING (MateriaId)
         join CURRICULA C on CurriculaPlanId=LiceoPlanPlanId and CurriculaMateriaId=MateriaId and CurriculaTipoDictadoId=GrupoMateriaTipoDictadoId and C.TipoDuracionId=GM.TipoDuracionId
-        where GrupoMateriaHorarioFchDesde <= $2
-          and GrupoMateriaHorarioFchHasta >= $2
-          and GrupoMateriaFchDesde = $3
-          /* and GrupoMateriaFchhasta >= curdate() */
+        where GrupoMateriaHorarioFchDesde <= '2019-04-30'/* curdate() */
+          and GrupoMateriaHorarioFchHasta >= '2019-04-30'/* curdate() */
+          and GrupoMateriaFchDesde >= $2
+          and year(GrupoMateriaFchDesde) = year($2)
+          and GrupoMateriaFchhasta >= '2019-01-30'/* curdate() */
           and LiceoPlanTurnoHorarioActivo=1
           and (ifnull(HorarioFchDesde,'1000-01-01')='1000-01-01' or HorarioFchDesde <= $2)
           and (ifnull(HorarioFchHasta,'1000-01-01')='1000-01-01' or HorarioFchHasta >= $2)
@@ -67,7 +65,7 @@ module.exports = {
           and LiceoPlanDependId = $1
           and Curricula_Ciclo = 2
         group by 1,2,3,4,5,6,7,8,9,10
-      `,[dependId, fechaHorarioActivo, desdeGM]);
+      `,[dependId, fechaInicioCurso]);
 
       if (!result) {
         return undefined;

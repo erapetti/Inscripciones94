@@ -20,4 +20,6 @@ module.exports.custom = {
   // stripeSecret: 'sk_test_Zzd814nldl91104qor5911gjald',
   // …
 
+  cupoPorMateria: 50,
+
 };

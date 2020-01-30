@@ -46,7 +46,6 @@ module.exports = {
     }
     cedula = cedula.replace(/[.,;-]/g,'');
 
-		const fechaHorarios = calcFechaHorarios();
 
     let viewdata = {
       title: "Inscripciones Plan 1994",
@@ -67,6 +66,7 @@ module.exports = {
 
       viewdata.ultimaInscripcion = inscripciones[0];
 
+      const fechaHorarios = calcFechaHorarios();
 			const listaLiceosConHorarios = await Dependencias.liceosConHorarios(fechaHorarios, fechaHorarios);
 
 			// filtro liceos piloto
@@ -105,8 +105,6 @@ module.exports = {
 			return res.redirect(sails.config.custom.basePath+'/');
 		}
 
-		const fechaHorarios = calcFechaHorarios();
-
 		let viewdata = {
 			title: "Inscripciones Plan 1994",
       id: "paso2",
@@ -117,10 +115,14 @@ module.exports = {
       horarios: [],
     };
 
+    const hoy = new Date('2019-01-30'); // new Date();
+    const fechaInicioCurso = (hoy.getMonth() < 5 ? hoy.getFullYear()+'-03-01' : (hoy.getMonth() < 10 ? hoy.getFullYear()+'-07-01' : (hoy.getFullYear()+1)+'-03-01'));
+
     try {
 			viewdata.dependDesc = await Dependencias.dependDesc(dependId);
 			viewdata.asignaturas = await Asignaturas.asignaturasPlan(14);
-			viewdata.horarios = await Horarios.get(dependId, fechaHorarios);
+			viewdata.horarios = await Horarios.get(dependId, fechaInicioCurso);
+      viewdata.vacantes = await Cupos.vacantes(dependId, fechaInicioCurso, sails.config.custom.cupoPorMateria);
 
     } catch (e) {
       viewdata.mensaje = e.message;

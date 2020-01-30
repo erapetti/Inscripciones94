@@ -100,6 +100,7 @@ var asignaturas = <%- JSON.stringify(asignaturas) %>;
 var orientaciones = [ {id:15,OrientacionDesc:'Humanístico'},{id:16,OrientacionDesc:'Biológico'},{id:17,OrientacionDesc:'Científico'} ];
 var opciones = [ {id:13,OpcionDesc:'Derecho',OrientacionId:15},{id:14,OpcionDesc:'Economía',OrientacionId:15},{id:15,OpcionDesc:'Agronomía',OrientacionId:16},{id:16,OpcionDesc:'Medicina',OrientacionId:16},{id:17,OpcionDesc:'Arquitectura',OrientacionId:17},{id:18,OpcionDesc:'Ingeniería',OrientacionId:17} ];
 var horarios = <%- JSON.stringify(horarios) %>;
+var vacantes = <%- JSON.stringify(vacantes) %>;
 var misHorarios = [];
 
 function update_asignatura() {
@@ -186,7 +187,12 @@ function verHorarios() {
   var body = [];
   horarios.forEach(function(h) {
     var conQuienSolapa = solapada(h.Horarios, misHorarios);
-    var disabled = misHorarios.find(function(m){return m.MateriaId==h.MateriaId && m.TipoDictadoDesc==h.TipoDictadoDesc}) ? 'ya agregada' : conQuienSolapa.length>0 ? 'se solapa con '+conQuienSolapa.join(', ') : undefined;
+    var objHayVacantes = vacantes.find(function(v){return v.GrupoMateriaId==h.id});
+    var hayVacantes = objHayVacantes ? objHayVacantes.vacantes : 1;
+    var disabled = misHorarios.find(function(m){return m.MateriaId==h.MateriaId && m.TipoDictadoDesc==h.TipoDictadoDesc}) ? 'ya agregada' :
+                     conQuienSolapa.length>0 ? 'se solapa con '+conQuienSolapa.join(', ') :
+                       hayVacantes < 1 ? 'no hay vacantes' :
+                         undefined;
     if (h.GradoId == gradoId && (!orientacionId || h.OrientacionId == orientacionId) && (!opcionId || h.OpcionId == opcionId) && h.AsignId == asignId) {
       body.push( formatoHorario(h, disabled, 'btn-primary', 'Agregar') );
     }

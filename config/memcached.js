@@ -11,6 +11,7 @@ module.exports = {
     curricula: 'I94::CC:',
     asignaturasPlan: 'I94::AP:',
     horarios: 'I94::H:',
+    vacantes: 'I94::V:',
   },
 
 };
