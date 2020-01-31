@@ -92,7 +92,7 @@
   <input type="hidden" name="cedula" value="<%= cedula %>">
   <input type="hidden" name="dependid" value="<%= dependId %>">
   <input type="hidden" name="gm" id="gm">
-  <button type="submit" class="btn btn-primary mt-3 mb-3" id="inscribirse" disabled>Inscribirse a los cursos seleccionados</button>
+  <button type="submit" class="btn btn-primary mt-3 mb-3" id="inscribirse" disabled>Solicitar inscripción</button>
 </form>
 
 <script>
@@ -161,7 +161,7 @@ function updateCGOOA() {
   update_asignatura();
 };
 
-function formatoHorario(horario, disabled, btnClass, btnText) {
+function formatoHorario(horario, disabled, btnClass, btnText, ultimosLugares) {
   var html = '<tr'+(disabled ? ' class="disabled"' : '')+'>';
   html += '<td>'+horario.MateriaNombre+'<br>'+horario.TipoDictadoDesc+'<br>'+horario.TipoDuracionDesc+'<br><small>('+horario.id+')</small></td>';
 
@@ -173,7 +173,9 @@ function formatoHorario(horario, disabled, btnClass, btnText) {
     html += '<td>'+arrHorarios[d].join('<br>')+'</td>';
   }
 
-  html += '<td class="d-print-none">'+(disabled ? '('+disabled+')' : '<button class="btn '+btnClass+'" data-id='+horario.id+'>'+btnText+'</button>')+'</td>';
+  if (btnText) {
+    html += '<td class="d-print-none">'+(disabled ? '('+disabled+')' : '<button class="btn '+btnClass+'" data-id='+horario.id+'>'+btnText+'</button>'+(ultimosLugares ? '<br><span class="text-danger small">¡Últimos lugares!</span>' : ''))+'</td>';
+  }
   html += '</tr>';
   return html;
 };
@@ -188,13 +190,13 @@ function verHorarios() {
   horarios.forEach(function(h) {
     var conQuienSolapa = solapada(h.Horarios, misHorarios);
     var objHayVacantes = vacantes.find(function(v){return v.GrupoMateriaId==h.id});
-    var hayVacantes = objHayVacantes ? objHayVacantes.vacantes : 1;
+    var hayVacantes = objHayVacantes ? objHayVacantes.vacantes : 10;
     var disabled = misHorarios.find(function(m){return m.MateriaId==h.MateriaId && m.TipoDictadoDesc==h.TipoDictadoDesc}) ? 'ya agregada' :
                      conQuienSolapa.length>0 ? 'se solapa con '+conQuienSolapa.join(', ') :
                        hayVacantes < 1 ? 'no hay vacantes' :
                          undefined;
     if (h.GradoId == gradoId && (!orientacionId || h.OrientacionId == orientacionId) && (!opcionId || h.OpcionId == opcionId) && h.AsignId == asignId) {
-      body.push( formatoHorario(h, disabled, 'btn-primary', 'Agregar') );
+      body.push( formatoHorario(h, disabled, 'btn-primary', 'Agregar', hayVacantes<5) );
     }
   });
 
@@ -238,7 +240,7 @@ function sacarHorario() {
 function verMisHorarios() {
   var body = [];
   misHorarios.forEach(function(m) {
-    body.push( formatoHorario(m, false, 'btn-danger', 'Sacar') );
+    body.push( formatoHorario(m, false, 'btn-danger', 'Sacar', false) );
   });
   $('#misHorarios tbody').html(body.join(''));
   if (misHorarios.length > 0) {

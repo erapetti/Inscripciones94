@@ -1,0 +1,86 @@
+
+<script>
+var asignaturas = <%- JSON.stringify(asignaturas) %>;
+var misHorarios = <%- JSON.stringify(misHorarios) %>;
+</script>
+
+<div id="comprobante">
+<p class="lead">Comprobante de solicitud de inscripción.</p>
+
+<div class="card">
+  <div class="card-header">Identificación</div>
+  <div class="card-body">
+      <div class="form-group">
+        <label for="cedula">Número de cédula</label>
+        <input type="text" class="form-control" id="cedula" value="<%= cedula %>" disabled>
+        <label for="nombre">Nombre</label>
+        <input type="text" class="form-control" id="nombre" value="<%= persona.PerNombreCompleto %>" disabled="disabled">
+        <label for="nombre">Fecha</label>
+        <input type="text" class="form-control" id="fecha" value="<%= fecha %>" disabled="disabled">
+        <label for="nombre">Número de inscripción</label>
+        <input type="text" class="form-control" id="InscripcionId" value="<%= inscripcionId %>" disabled="disabled">
+      </div>
+  </div>
+</div>
+
+<div class="card mt-3">
+  <div class="card-header">Liceo</div>
+  <div class="card-body">
+    <input type="text" class="form-control" id="dependDesc" value="<%= dependDesc %>" disabled="disabled">
+  </div>
+</div>
+
+<div class="card mt-3">
+  <div class="card-header bg-success text-white">Materias solicitadas</div>
+  <div class="card-body">
+
+<% misHorarios.forEach(function(horario) { %>
+    <div class="card mt-3">
+      <div class="card-header">Plan 1994 - <%- horario.GradoId %>º BD<% if (horario.OrientacionId>1 && horario.OpcionId==1) { %> - <%- orientaciones.find(function(o){return o.id==horario.OrientacionId}).OrientacionDesc %><% } %><% if (horario.OpcionId>1) { %> - <%- opciones.find(function(o){return o.id==horario.OpcionId}).OpcionDesc %><% } %></div>
+      <div class="card-body">
+        <p>
+          <b>Materia:</b><br><%- horario.MateriaNombre %> - <%- horario.TipoDictadoDesc %> - <%- horario.TipoDuracionDesc %> - <%- horario.GrupoMateriaDesc %> (<%- horario.id %>)<br>
+          <b>Horarios:</b><br><%- horario.Horarios.replace(/,/g,', ') %>
+        </p>
+      </div>
+    </div>
+<% }) %>
+
+  </div>
+</div>
+
+</div>
+
+<button class="btn btn-primary mt-3 mb-3 d-print-none" id="print" onClick="window.print()">Imprimir solicitud</button>
+<button class="btn btn-primary mt-3 mb-3 mr-3 d-print-none" id="download" onclick="download()">Descargar comprobante</button>
+
+<button class="btn btn-danger mt-3 mb-3 d-print-none" id="anular">Anular solicitud</button>
+
+<script>
+function download() {
+  alert('entra');
+
+   html2canvas(document.body, {scale:5, logging:false}).then(function(canvas) {
+       console.log('fin');
+       var img=canvas.toDataURL("image/png");
+       var doc = new jsPDF();
+       doc.addImage(img,'JPEG',20,20);
+       doc.save('test.pdf');
+     }
+   );
+  /*
+  var margins = {
+    top: 80,
+    bottom: 60,
+    left: 40,
+    width: 522
+  };
+  var doc = new jsPDF({format:'a4'});
+  doc.html(document.body, {
+   callback: function (doc) {
+     doc.save('comprobante-<%- inscripcionId %>.pdf');
+   }
+  });
+  */
+};
+</script>

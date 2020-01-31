@@ -15,7 +15,9 @@
     "datatables.net-bs4": "^1.10.20",
     "grunt": "1.0.4",
     "grunt-sync": "^0.8.1",
+    "html2canvas": "^1.0.0-rc.5",
     "jquery": "^3.4.1",
+    "jspdf": "^1.5.3",
     "knex": "^0.20.4",
     "memcached": "^2.2.2",
     "popper": "^1.0.1",
@@ -24,7 +26,8 @@
     "sails-hook-grunt": "^4.0.0",
     "sails-hook-orm": "^2.1.1",
     "sails-hook-sockets": "^2.0.0",
-    "sails-mysql": "^1.0.1"
+    "sails-mysql": "^1.0.1",
+    "sprintf": "^0.1.5"
   },
   "devDependencies": {
     "eslint": "5.16.0"

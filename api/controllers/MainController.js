@@ -115,8 +115,7 @@ module.exports = {
       horarios: [],
     };
 
-    const hoy = new Date('2019-01-30'); // new Date();
-    const fechaInicioCurso = (hoy.getMonth() < 5 ? hoy.getFullYear()+'-03-01' : (hoy.getMonth() < 10 ? hoy.getFullYear()+'-07-01' : (hoy.getFullYear()+1)+'-03-01'));
+    const fechaInicioCurso = calcFechaInicioCurso();
 
     try {
 			viewdata.dependDesc = await Dependencias.dependDesc(dependId);
@@ -131,6 +130,13 @@ module.exports = {
 		return res.view(viewdata);
 	},
 
+/*                                    _____
+                 _ __   __ _ ___  ___|___ /
+                | '_ \ / _` / __|/ _ \ |_ \
+                | |_) | (_| \__ \ (_) |__) |
+                | .__/ \__,_|___/\___/____/
+                |_|
+*/
   paso3: async function(req,res) {
     const cedula = req.param('cedula','').checkFormat(/[\d.,;-]+/);
     const dependId = req.param('dependid').checkFormat(/\d+/);
@@ -144,11 +150,24 @@ module.exports = {
       id: "paso3",
       cedula: cedula,
       dependId: dependId,
-      gm: gm,
+      fecha: (new Date()).fecha_toString(),
+      inscripcionId: '',
+      persona: {},
+      dependDesc: '',
+      asignaturas: [],
+      misHorarios: [],
+      orientaciones: [ {id:15,OrientacionDesc:'Humanístico'},{id:16,OrientacionDesc:'Biológico'},{id:17,OrientacionDesc:'Científico'} ],
+      opciones: [ {id:13,OpcionDesc:'Derecho',OrientacionId:15},{id:14,OpcionDesc:'Economía',OrientacionId:15},{id:15,OpcionDesc:'Agronomía',OrientacionId:16},{id:16,OpcionDesc:'Medicina',OrientacionId:16},{id:17,OpcionDesc:'Arquitectura',OrientacionId:17},{id:18,OpcionDesc:'Ingeniería',OrientacionId:17} ],
     };
 
-    try {
+    const fechaInicioCurso = calcFechaInicioCurso();
 
+    try {
+      viewdata.persona = await Personas.findOne({PaisCod:'UY',DocCod:'CI',PerDocId:cedula});
+      viewdata.dependDesc = await Dependencias.dependDesc(dependId);
+			viewdata.asignaturas = await Asignaturas.asignaturasPlan(14);
+			const horarios = await Horarios.get(dependId, fechaInicioCurso);
+      viewdata.misHorarios = gm.split(/,/).map(grupoMateriaId => horarios.find(h => h.id==grupoMateriaId));
     } catch (e) {
       viewdata.mensaje = e.message;
     }
@@ -177,6 +196,12 @@ String.prototype.checkFormat = function(regexp) {
   return (this.match(regexp) ? this.toString() : undefined);
 };
 
+Date.prototype.fecha_toString = function() {
+  var sprintf = require("sprintf");
+  var mes = Array('enero','febrero','marzo','abril','mayo','junio','julio','agosto','setiembre','octubre','noviembre','diciembre');
+  return sprintf("%d de %s de %d, %02d:%02d", this.getDate(),mes[this.getMonth()],this.getFullYear(),this.getHours(),this.getMinutes());
+};
+
 // la fecha en que los horarios tienen que existir:
 function calcFechaHorarios() {
 	const mesActual = (new Date()).getMonth();
@@ -188,4 +213,10 @@ function calcFechaHorarios() {
 															(anioActual+1)+'-04-01'
 	);
 	return fechaHorarios;
-}
+};
+
+function calcFechaInicioCurso() {
+  const hoy = new Date('2019-01-30'); // new Date();
+  const fechaInicioCurso = (hoy.getMonth() < 5 ? hoy.getFullYear()+'-03-01' : (hoy.getMonth() < 10 ? hoy.getFullYear()+'-07-01' : (hoy.getFullYear()+1)+'-03-01'));
+  return fechaInicioCurso;
+};
