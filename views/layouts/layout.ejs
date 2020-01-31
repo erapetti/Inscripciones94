@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
   <head>
-    <title><% if (typeof title !== 'undefined') { %><%= title %><% } %></title>
+    <title><%= (typeof title !== 'undefined' ? title : '') %></title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -16,8 +16,8 @@
     <!--STYLES END-->
   </head>
 
-  <body class="p-3" id="<%= id %>">
-    <h1><% if (typeof title !== 'undefined') { %><%= title %><% } %></h1>
+  <body class="p-3" id="<%= (typeof id !== 'undefined' ? id : '') %>">
+    <h1><%= (typeof title !== 'undefined' ? title : '') %></h1>
 
     <% if (typeof mensaje !== "undefined") { -%>
     <div class="alert alert-danger mt-5 w-75" role="alert"><%- mensaje %></div>

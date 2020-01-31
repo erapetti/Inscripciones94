@@ -58,14 +58,12 @@ var misHorarios = <%- JSON.stringify(misHorarios) %>;
 
 <script>
 function download() {
-  alert('entra');
 
-   html2canvas(document.body, {scale:5, logging:false}).then(function(canvas) {
-       console.log('fin');
+   html2canvas(document.body, {scale:1, logging:false, windowWidth:500}).then(function(canvas) {
        var img=canvas.toDataURL("image/png");
        var doc = new jsPDF();
        doc.addImage(img,'JPEG',20,20);
-       doc.save('test.pdf');
+       doc.save('comprobante-<%- inscripcionId %>.pdf');
      }
    );
   /*

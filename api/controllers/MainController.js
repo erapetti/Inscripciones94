@@ -138,9 +138,9 @@ module.exports = {
                 |_|
 */
   paso3: async function(req,res) {
-    const cedula = req.param('cedula','').checkFormat(/[\d.,;-]+/);
-    const dependId = req.param('dependid').checkFormat(/\d+/);
-    const gm = req.param('gm').checkFormat(/[\d,]+/);
+    const cedula = (req.param('cedula','') || '').checkFormat(/[\d.,;-]+/);
+    const dependId = (req.param('dependid') || '').checkFormat(/\d+/);
+    const gm = (req.param('gm') || '').checkFormat(/[\d,]+/);
     if (!cedula || !dependId || !gm) {
       return res.redirect(sails.config.custom.basePath+'/');
     }
@@ -185,9 +185,6 @@ module.exports = {
 */
 
 String.prototype.checkFormat = function(regexp) {
-  if (typeof this === 'undefined') {
-    return undefined;
-  }
   if (typeof regexp === 'string') {
     regexp = new RegExp('^'+regexp+'$');
   } else {
