@@ -7,30 +7,18 @@ var misHorarios = <%- JSON.stringify(misHorarios) %>;
 <div id="comprobante">
 <p class="lead">Comprobante de solicitud de inscripción.</p>
 
-<div class="card">
-  <div class="card-header">Identificación</div>
-  <div class="card-body">
-      <div class="form-group">
         <label for="cedula">Número de cédula</label>
         <input type="text" class="form-control" id="cedula" value="<%= cedula %>" disabled>
         <label for="nombre">Nombre</label>
         <input type="text" class="form-control" id="nombre" value="<%= persona.PerNombreCompleto %>" disabled="disabled">
+        <label for="nombre">Liceo</label>
+        <input type="text" class="form-control" id="dependDesc" value="<%= dependDesc %>" disabled="disabled">
         <label for="nombre">Fecha</label>
         <input type="text" class="form-control" id="fecha" value="<%= fecha %>" disabled="disabled">
         <label for="nombre">Número de inscripción</label>
         <input type="text" class="form-control" id="InscripcionId" value="<%= inscripcionId %>" disabled="disabled">
-      </div>
-  </div>
-</div>
 
-<div class="card mt-3">
-  <div class="card-header">Liceo</div>
-  <div class="card-body">
-    <input type="text" class="form-control" id="dependDesc" value="<%= dependDesc %>" disabled="disabled">
-  </div>
-</div>
-
-<div class="card mt-3">
+<div class="card mt-5">
   <div class="card-header bg-success text-white">Materias solicitadas</div>
   <div class="card-body">
 
@@ -39,8 +27,8 @@ var misHorarios = <%- JSON.stringify(misHorarios) %>;
       <div class="card-header">Plan 1994 - <%- horario.GradoId %>º BD<% if (horario.OrientacionId>1 && horario.OpcionId==1) { %> - <%- orientaciones.find(function(o){return o.id==horario.OrientacionId}).OrientacionDesc %><% } %><% if (horario.OpcionId>1) { %> - <%- opciones.find(function(o){return o.id==horario.OpcionId}).OpcionDesc %><% } %></div>
       <div class="card-body">
         <p>
-          <b>Materia:</b><br><%- horario.MateriaNombre %> - <%- horario.TipoDictadoDesc %> - <%- horario.TipoDuracionDesc %> - <%- horario.GrupoMateriaDesc %> (<%- horario.id %>)<br>
-          <b>Horarios:</b><br><%- horario.Horarios.replace(/,/g,', ') %>
+          <%- horario.MateriaNombre %> - <%- horario.TipoDictadoDesc %> - <%- horario.TipoDuracionDesc %> - <%- horario.GrupoMateriaDesc %> (<%- horario.id %>)<br>
+          <%- horario.Horarios.replace(/,/g,', ') %>
         </p>
       </div>
     </div>
@@ -49,6 +37,12 @@ var misHorarios = <%- JSON.stringify(misHorarios) %>;
   </div>
 </div>
 
+</div>
+
+<div class="alert alert-danger mt-3">
+  <p>Esta solicitud de inscripción es válida por 2 días hábiles.<br>
+     Debes confirmarla en liceo <%- dependDesc %> entre hoy y el <%- vencimiento %> en el horario de 20:00 a 23:00.<br>
+     Pasada esa fecha otro estudiante puede ocupar tu lugar en las materias solicitadas.</p>
 </div>
 
 <button class="btn btn-primary mt-3 mb-3 d-print-none" id="print" onClick="window.print()">Imprimir solicitud</button>

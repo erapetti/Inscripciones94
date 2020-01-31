@@ -17,7 +17,12 @@
   </head>
 
   <body class="p-3" id="<%= (typeof id !== 'undefined' ? id : '') %>">
-    <h1><%= (typeof title !== 'undefined' ? title : '') %></h1>
+    <div class="media">
+      <img src="/images/ces.png" class="align-self-center m-0" alt="Consejo de Educación Secundaria">
+      <div class="media-body">
+        <h1><%= (typeof title !== 'undefined' ? title : '') %></h1>
+      </div>
+    </div>
 
     <% if (typeof mensaje !== "undefined") { -%>
     <div class="alert alert-danger mt-5 w-75" role="alert"><%- mensaje %></div>

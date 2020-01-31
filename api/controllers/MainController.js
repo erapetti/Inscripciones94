@@ -27,6 +27,7 @@ module.exports = {
     let viewdata = {
       title: "Inscripciones Plan 1994",
       id: "inicio",
+      vencimiento: calcFechaVencimiento().fecha_toString(),
     };
     return res.view(viewdata);
   },
@@ -150,7 +151,8 @@ module.exports = {
       id: "paso3",
       cedula: cedula,
       dependId: dependId,
-      fecha: (new Date()).fecha_toString(),
+      fecha: (new Date()).fechahora_toString(),
+      vencimiento: calcFechaVencimiento().fecha_toString(),
       inscripcionId: '',
       persona: {},
       dependDesc: '',
@@ -193,10 +195,16 @@ String.prototype.checkFormat = function(regexp) {
   return (this.match(regexp) ? this.toString() : undefined);
 };
 
-Date.prototype.fecha_toString = function() {
+Date.prototype.fechahora_toString = function() {
   var sprintf = require("sprintf");
   var mes = Array('enero','febrero','marzo','abril','mayo','junio','julio','agosto','setiembre','octubre','noviembre','diciembre');
   return sprintf("%d de %s de %d, %02d:%02d", this.getDate(),mes[this.getMonth()],this.getFullYear(),this.getHours(),this.getMinutes());
+};
+
+Date.prototype.fecha_toString = function() {
+  var sprintf = require("sprintf");
+  var mes = Array('enero','febrero','marzo','abril','mayo','junio','julio','agosto','setiembre','octubre','noviembre','diciembre');
+  return sprintf("%d de %s de %d", this.getDate(),mes[this.getMonth()],this.getFullYear());
 };
 
 // la fecha en que los horarios tienen que existir:
@@ -217,3 +225,8 @@ function calcFechaInicioCurso() {
   const fechaInicioCurso = (hoy.getMonth() < 5 ? hoy.getFullYear()+'-03-01' : (hoy.getMonth() < 10 ? hoy.getFullYear()+'-07-01' : (hoy.getFullYear()+1)+'-03-01'));
   return fechaInicioCurso;
 };
+
+function calcFechaVencimiento() {
+  const hoy = new Date();
+  return new Date(hoy.getTime() + 24*60*60*1000 * (hoy.getDay()==6 ? 3 : hoy.getDay()>=4 ? 4 : 2));
+}
