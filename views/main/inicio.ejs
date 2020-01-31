@@ -8,16 +8,27 @@
   <h5>Las solicitudes deben ser confirmadas personalmente en liceo entre hoy y el <%- vencimiento %> en el horario de 20:00 a 23:00.</h5>
 </div>
 
-<form method="post" action="<%= sails.config.custom.basePath %>/main/paso1">
+<button class="btn btn-primary" onclick="iniciar()" id="iniciar">Iniciar</button>
 
-  <div class="card">
-   <div class="card-header bg-primary text-white">Identificación</div>
-   <div class="card-body">
-       <div class="form-group">
-         <label for="cedula">Número de cédula</label>
-         <input type="text" class="form-control" id="cedula" name="cedula" maxlength="11">
-       </div>
-       <input type="submit" name="submit" class="btn btn-primary" value="Buscar">
-   </div>
-  </div>
-</form>
+<div id="identificacion" class="d-none">
+
+  <form method="post" action="<%= sails.config.custom.basePath %>/main/paso1">
+
+    <div class="card">
+     <div class="card-header bg-primary text-white">Identificación</div>
+     <div class="card-body">
+         <div class="form-group">
+           <label for="cedula">Número de cédula</label>
+           <input type="text" class="form-control" id="cedula" name="cedula" maxlength="11">
+         </div>
+         <input type="submit" name="submit" class="btn btn-primary" value="Buscar">
+     </div>
+    </div>
+  </form>
+</div>
+<script>
+function iniciar() {
+  $('#iniciar').addClass("d-none");
+  $('#identificacion').removeClass("d-none");
+}
+</script>

@@ -25,7 +25,7 @@ module.exports = {
   inicio: async function(req,res) {
 
     let viewdata = {
-      title: "Inscripciones Plan 1994",
+      title: "Inscripciones para Plan 1994<small> (turno nocturno)</small>",
       id: "inicio",
       vencimiento: calcFechaVencimiento().fecha_toString(),
     };
@@ -49,7 +49,7 @@ module.exports = {
 
 
     let viewdata = {
-      title: "Inscripciones Plan 1994",
+      title: "Inscripciones para Plan 1994<small> (turno nocturno)</small>",
       id: "paso1",
       cedula: cedula,
     };
@@ -107,7 +107,7 @@ module.exports = {
 		}
 
 		let viewdata = {
-			title: "Inscripciones Plan 1994",
+			title: "Inscripciones para Plan 1994<small> (turno nocturno)</small>",
       id: "paso2",
 			cedula: cedula,
 			dependId: dependId,
@@ -147,7 +147,7 @@ module.exports = {
     }
 
     let viewdata = {
-      title: "Inscripciones Plan 1994",
+      title: "Inscripciones para Plan 1994<small> (turno nocturno)</small>",
       id: "paso3",
       cedula: cedula,
       dependId: dependId,

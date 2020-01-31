@@ -66,34 +66,37 @@
   </div>
 </div>
 
+<button class="btn btn-primary mt-3" id="btn-horarios" onclick="verZonaHorarios()" disabled>Ver horarios de las materias seleccionadas <span class="badge badge-secondary"></span></button>
+<div id="zona-horarios" class="d-none">
 
-<div class="card mt-3">
-  <div class="card-header bg-success text-white">Propuesta de horarios</div>
-  <div class="card-body">
-    <p>Al agregar materias iremos mostrando los horarios seleccionados.</p>
+  <div class="card mt-3">
+    <div class="card-header bg-success text-white">Propuesta de horarios</div>
+    <div class="card-body">
+      <p>Al agregar materias iremos mostrando los horarios seleccionados.</p>
 
-    <div class="table-responsive d-none my-3" id="misHorarios">
-      <table class="table">
-        <thead>
-          <tr><th>Materia</th><th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th><th class="d-print-none"></th></tr>
-        </thead>
-        <tbody>
-        </tbody>
-      </table>
+      <div class="table-responsive d-none my-3" id="misHorarios">
+        <table class="table">
+          <thead>
+            <tr><th>Materia</th><th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th><th class="d-print-none"></th></tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Cuando elijas todas las materias puedes realizar la inscripción a los cursos.</p>
     </div>
-
-    <p>Cuando elijas todas las materias puedes realizar la inscripción a los cursos.</p>
   </div>
+
+  <div class="alert alert-danger mt-3 mb-0 d-none" id="mensaje"></div>
+
+  <form method="post" action="<%= sails.config.custom.basePath %>/main/paso3">
+    <input type="hidden" name="cedula" value="<%= cedula %>">
+    <input type="hidden" name="dependid" value="<%= dependId %>">
+    <input type="hidden" name="gm" id="gm">
+    <button type="submit" class="btn btn-primary mt-3 mb-3" id="inscribirse" disabled>Solicitar inscripción</button>
+  </form>
 </div>
-
-<div class="alert alert-danger mt-3 mb-0 d-none" id="mensaje"></div>
-
-<form method="post" action="<%= sails.config.custom.basePath %>/main/paso3">
-  <input type="hidden" name="cedula" value="<%= cedula %>">
-  <input type="hidden" name="dependid" value="<%= dependId %>">
-  <input type="hidden" name="gm" id="gm">
-  <button type="submit" class="btn btn-primary mt-3 mb-3" id="inscribirse" disabled>Solicitar inscripción</button>
-</form>
 
 <script>
 var asignaturas = <%- JSON.stringify(asignaturas) %>;
@@ -203,7 +206,6 @@ function verHorarios() {
   $('#horarios tbody').html(body.join(''));
   $('#horarios').removeClass('d-none');
   $('#horarios button').click(agregarHorario);
-  $(window).scrollTop($('#horarios').offset().top);
 };
 
 function solapada(strHorarios, misHorarios) {
@@ -224,6 +226,8 @@ function agregarHorario() {
   misHorarios.push( horarios.find(function(h) { return h.id == id }) );
   verHorarios();
   verMisHorarios();
+  $('#btn-horarios .badge').html(misHorarios.length);
+  $('#btn-horarios').removeAttr("disabled");
 };
 
 function sacarHorario() {
@@ -249,11 +253,14 @@ function verMisHorarios() {
     $('#misHorarios').addClass('d-none');
   }
   $('#misHorarios button').click(sacarHorario);
-  $(window).scrollTop($('#misHorarios').offset().top);
 
   validar(misHorarios);
 };
 
+function verZonaHorarios() {
+  $('#zona-materias').addClass("d-none");
+  $('#zona-horarios').removeClass("d-none");
+}
 function validar(misHorarios) {
   var error = [];
   var cantHoras = 0;

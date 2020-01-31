@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
   <head>
-    <title><%= (typeof title !== 'undefined' ? title : '') %></title>
+    <title><%- (typeof title !== 'undefined' ? title.replace(/<[^>]*>?/gm, '') : '') %></title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -16,20 +16,27 @@
     <!--STYLES END-->
   </head>
 
-  <body class="p-3" id="<%= (typeof id !== 'undefined' ? id : '') %>">
-    <div class="media">
-      <img src="/images/ces.png" class="align-self-center m-0" alt="Consejo de Educación Secundaria">
-      <div class="media-body">
-        <h1><%= (typeof title !== 'undefined' ? title : '') %></h1>
-      </div>
-    </div>
+  <body id="<%= (typeof id !== 'undefined' ? id : '') %>">
 
-    <% if (typeof mensaje !== "undefined") { -%>
-    <div class="alert alert-danger mt-5 w-75" role="alert"><%- mensaje %></div>
-    <button onClick="window.location.href='<%= sails.config.custom.basePath %>/'" class="btn btn-primary">Volver al inicio</button>
-    <% } else { -%>
-    <%- body %>
-    <% } -%>
+    <nav class="navbar navbar-light bg-light">
+      <a class="navbar-brand" href="#">
+        <h2 style="color:#2F528A"><img src="/images/ces.png" height=20 class="d-inline-block align-self-center m-0">
+        Consejo de Educación Secundaria</h2>
+      </a>
+    </nav>
+
+    <div class="p-3">
+
+      <h1><%- (typeof title !== 'undefined' ? title : '') %></h1>
+
+      <% if (typeof mensaje !== "undefined") { -%>
+      <div class="alert alert-danger mt-5 w-75" role="alert"><%- mensaje %></div>
+      <button onClick="window.location.href='<%= sails.config.custom.basePath %>/'" class="btn btn-primary">Volver al inicio</button>
+      <% } else { -%>
+      <%- body %>
+      <% } -%>
+
+    </div>
 
     <!--TEMPLATES-->
 
