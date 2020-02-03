@@ -2,9 +2,11 @@
    utilizar este formulario para solicitar inscripciones a materias en liceos
    seleccionados.
 </p>
+
+<p>El Plan 1994 "Martha Averbug" es una propuesta educativa diseñada para adultos y jóvenes con condicionamientos laborales.</p>
+<p>Todas las reinscripciones para los cursos 2020 en los liceos "Dámaso Antonio Larrañaga" (Montevideo 3) y "Líber Falco" (Montevideo 26) deben realizarse completando este formulario web.</p>
+
 <div class="jumbotron">
-  <p>Deben iniciarse con este formulario todas las reinscripciones para Plan 1994, turno nocturno, de los liceos "Dámaso Antonio Larrañaga" (Montevideo 3) y "Líber Falco" (Montevideo 26).</p>
-  <hr class="my-4">
   <h5>Las solicitudes deben ser confirmadas personalmente en liceo entre hoy y el <%- vencimiento %> en el horario de 20:00 a 23:00.</h5>
 </div>
 
@@ -21,14 +23,15 @@
            <label for="cedula">Número de cédula</label>
            <input type="text" class="form-control" id="cedula" name="cedula" maxlength="11">
          </div>
-         <input type="submit" name="submit" class="btn btn-primary" value="Buscar">
+         <input type="submit" name="submit" class="btn btn-primary" id="submit" value="Buscar">
      </div>
     </div>
   </form>
 </div>
 <script>
 function iniciar() {
-  $('#iniciar').addClass("d-none");
-  $('#identificacion').removeClass("d-none");
+  $('#iniciar').addClass('d-none');
+  $('#identificacion').removeClass('d-none');
+  $('html,body').animate({ scrollTop: $('#submit').offset().top }, 1000);
 }
 </script>

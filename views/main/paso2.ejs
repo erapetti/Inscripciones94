@@ -21,52 +21,59 @@
   </div>
 </div>
 
-<div class="card mt-3">
-  <div class="card-header bg-primary text-white">Materias</div>
-  <div class="card-body">
-    <p>Seleccione el grado y asignatura para acceder a los horarios:</p>
+<div id='zona-materias'>
+  <div class="card mt-3">
+    <div class="card-header bg-primary text-white">Materias</div>
+    <div class="card-body">
+      <p>Seleccione el grado y asignatura para acceder a los horarios. Luego agregue materias hasta completar todas las que quiere cursar este año.</p>
 
-    <label for="grado">Grado</label>
-    <select class="custom-select has-feedback" id="grado" name="grado" onChange="updateCGOOA()">
-      <option selected disabled>Elija un grado...</option>
-      <option value="1">1º BD (4º)</option>
-      <option value="2">2º BD (5ª)</option>
-      <option value="3">3º BD (6º)</option>
-    </select>
-
-    <div id="gOrientacion">
-      <label for="orientacion">Orientación</label>
-      <select class="custom-select has-feedback" id="orientacion" name="orientacion" onChange="updateCGOOA()">
+      <label for="grado">Grado</label>
+      <select class="custom-select has-feedback" id="grado" name="grado" onChange="updateCGOOA()">
+        <option selected disabled>Elija un grado...</option>
+        <option value="1">1º BD (4º)</option>
+        <option value="2">2º BD (5ª)</option>
+        <option value="3">3º BD (6º)</option>
       </select>
-    </div>
 
-    <div id="gOpcion">
-      <label for="opcion">Opción</label>
-      <select class="custom-select has-feedback" id="opcion" name="opcion" onChange="updateCGOOA()">
-      </select>
-    </div>
+      <div id="gOrientacion">
+        <label for="orientacion">Orientación</label>
+        <select class="custom-select has-feedback" id="orientacion" name="orientacion" onChange="updateCGOOA()">
+        </select>
+      </div>
 
-    <div id="gAsignatura">
-      <label for="asignatura">Asignatura</label>
-      <select class="custom-select has-feedback" id="asignatura" name="asignatura" onchange="verHorarios()">
-      </select>
-    </div>
+      <div id="gOpcion">
+        <label for="opcion">Opción</label>
+        <select class="custom-select has-feedback" id="opcion" name="opcion" onChange="updateCGOOA()">
+        </select>
+      </div>
 
-    <div class="table-responsive my-3 d-none" id="horarios">
-      <label>Horarios de los grupos disponibles:</label>
-      <table class="table">
-        <thead>
-          <tr><th>Materia</th><th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th><th class="d-print-none"></th></tr>
-        </thead>
-        <tbody>
-        </tbody>
-      </table>
-    </div>
+      <div id="gAsignatura">
+        <label for="asignatura">Asignatura</label>
+        <select class="custom-select has-feedback" id="asignatura" name="asignatura" onchange="verHorarios()">
+        </select>
+      </div>
 
+      <div class="table-responsive my-3 d-none" id="horarios">
+        <label>Horarios de los grupos disponibles:</label>
+        <table class="table">
+          <thead>
+            <tr><th>Materia</th><th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th><th>Sábado</th><th class="d-print-none"></th></tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
   </div>
+
+  <div class="row mt-3 ml-0 mr-0">
+    <button class="btn btn-primary" id="btn-horarios" onclick="verZonaHorarios()" disabled>Ver horarios de las materias seleccionadas <span class="badge badge-secondary"></span></button>
+    <div class="alert alert-success m-0 ml-1" style="display:none;padding:.375rem .75rem" id="mensaje-ok"></div>
+  </div>
+
 </div>
 
-<button class="btn btn-primary mt-3" id="btn-horarios" onclick="verZonaHorarios()" disabled>Ver horarios de las materias seleccionadas <span class="badge badge-secondary"></span></button>
 <div id="zona-horarios" class="d-none">
 
   <div class="card mt-3">
@@ -77,7 +84,7 @@
       <div class="table-responsive d-none my-3" id="misHorarios">
         <table class="table">
           <thead>
-            <tr><th>Materia</th><th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th><th class="d-print-none"></th></tr>
+            <tr><th>Materia</th><th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th><th>Sábado</th><th class="d-print-none"></th></tr>
           </thead>
           <tbody>
           </tbody>
@@ -88,15 +95,16 @@
     </div>
   </div>
 
-  <div class="alert alert-danger mt-3 mb-0 d-none" id="mensaje"></div>
-
   <form method="post" action="<%= sails.config.custom.basePath %>/main/paso3">
     <input type="hidden" name="cedula" value="<%= cedula %>">
     <input type="hidden" name="dependid" value="<%= dependId %>">
     <input type="hidden" name="gm" id="gm">
-    <button type="submit" class="btn btn-primary mt-3 mb-3" id="inscribirse" disabled>Solicitar inscripción</button>
+    <button type="button" class="btn btn-primary my-3" id="btn-materias" onclick="verZonaMatrias()">Agregar otra materia</button>
+    <button type="submit" class="btn btn-primary my-3" id="inscribirse" disabled>Solicitar inscripción</button>
   </form>
 </div>
+
+<div class="alert alert-danger mt-3 mb-0 d-none" id="mensaje"></div>
 
 <script>
 var asignaturas = <%- JSON.stringify(asignaturas) %>;
@@ -115,7 +123,6 @@ function update_asignatura() {
     $('#gAsignatura').addClass('d-none');
   } else {
     asignaturas.forEach(function(a){
-      //console.log(orientacionId,opcionId,a.orientacionId,a.opcionId);
       if (a.gradoId == gradoId && (!orientacionId || a.orientacionId == orientacionId) && (!opcionId || a.opcionId == opcionId)) {
         options.push( '<option value='+a.id+'>'+a.AsignDesc+'</option>' );
       }
@@ -166,9 +173,9 @@ function updateCGOOA() {
 
 function formatoHorario(horario, disabled, btnClass, btnText, ultimosLugares) {
   var html = '<tr'+(disabled ? ' class="disabled"' : '')+'>';
-  html += '<td>'+horario.MateriaNombre+'<br>'+horario.TipoDictadoDesc+'<br>'+horario.TipoDuracionDesc+'<br><small>('+horario.id+')</small></td>';
+  html += '<td>'+horario.MateriaNombre+' de '+horario.GradoId+'º BD<br>'+horario.TipoDictadoDesc+'<br>'+horario.TipoDuracionDesc+'<br><small>('+horario.id+')</small></td>';
 
-  var arrHorarios = {'LUN':[],'MAR':[],'MIE':[],'JUE':[],'VIE':[]};
+  var arrHorarios = {'LUN':[],'MAR':[],'MIE':[],'JUE':[],'VIE':[],'SAB':[]};
   horario.Horarios.split(/,/).forEach(function(hd) {
     arrHorarios[hd.substr(0,3)].push( hd.substr(4) );
   });
@@ -206,6 +213,8 @@ function verHorarios() {
   $('#horarios tbody').html(body.join(''));
   $('#horarios').removeClass('d-none');
   $('#horarios button').click(agregarHorario);
+  $('html,body').animate({ scrollTop: $('#btn-horarios').offset().top }, 1000);
+  mensaje(!body.length ? 'No hay horarios disponibles para esta asignatura' : '');
 };
 
 function solapada(strHorarios, misHorarios) {
@@ -226,8 +235,12 @@ function agregarHorario() {
   misHorarios.push( horarios.find(function(h) { return h.id == id }) );
   verHorarios();
   verMisHorarios();
+  validar(misHorarios);
   $('#btn-horarios .badge').html(misHorarios.length);
   $('#btn-horarios').removeAttr("disabled");
+  $('#mensaje-ok').html('La materia fue agregada a tu selección').show();
+  setTimeout(function(){$('#mensaje-ok').hide(1000)}, 5000);
+  updateCGOOA();
 };
 
 function sacarHorario() {
@@ -239,6 +252,7 @@ function sacarHorario() {
   }
   verHorarios();
   verMisHorarios();
+  validar(misHorarios);
 };
 
 function verMisHorarios() {
@@ -253,23 +267,34 @@ function verMisHorarios() {
     $('#misHorarios').addClass('d-none');
   }
   $('#misHorarios button').click(sacarHorario);
-
-  validar(misHorarios);
 };
+
+function verZonaMatrias() {
+  $('#zona-materias').removeClass("d-none");
+  $('#zona-horarios').addClass("d-none");
+  updateCGOOA();
+}
 
 function verZonaHorarios() {
   $('#zona-materias').addClass("d-none");
   $('#zona-horarios').removeClass("d-none");
 }
+
 function validar(misHorarios) {
   var error = [];
   var cantHoras = 0;
+  var grados = {};
+  var asignaturasDiferentes = {};
 
   // valido que cada práctico tenga su teórico:
   var materias = { 'Teórico':{}, 'Práctico':{} };
   misHorarios.forEach(function(m) {
     materias[m.TipoDictadoDesc][m.MateriaNombre] = 1;
     cantHoras += m.Horarios.split(/,/).length;
+    grados[m.GradoId] = 1;
+    if (m.TipoDictadoDesc == 'Teórico') {
+      asignaturasDiferentes[m.AsignId] = (asignaturasDiferentes[m.AsignId]+1) || 1;
+    }
   });
   for (var materia in materias['Práctico']) {
     if (typeof materias['Teórico'][materia] === 'undefined') {
@@ -277,8 +302,19 @@ function validar(misHorarios) {
     }
   }
 
+  // valido la cantidad total de horas
   if (cantHoras > 38) {
     error.push('Has superado el tope de 38 horas de clase');
+  }
+
+  // valido la cantidad de grados
+  if (Object.keys(grados).length > 2) {
+    error.push('El Plan de estudios no permite inscripciones en más de dos grados o niveles (Art. 4)');
+  }
+
+  // valido materias correlativas
+  if (Object.values(asignaturasDiferentes).reduce(function(v,m){ return v || m>1 }, false)) {
+    error.push('No se permiten inscripciones a materias correlativas en el formulario web (Art. 8)');
   }
 
   // muestro un mensaje con el resultado de la validación
