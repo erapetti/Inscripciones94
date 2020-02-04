@@ -165,11 +165,39 @@ module.exports = {
     const fechaInicioCurso = calcFechaInicioCurso();
 
     try {
+      const persona = await Personas.findOne({PaisCod:'UY',DocCod:'CI',PerDocId:cedula});
+      if (!persona) {
+        throw new Error('No se encuentran datos asociados al número de cédula');
+      }
+
+      const horarios = await Horarios.get(dependId, fechaInicioCurso);
+
+      const datosUltCurso = await Inscripciones.ultCurso(persona.id);
+      if (!datosUltCurso) {
+        throw new Error('No se encuentran datos del último curso');
+      }
+
+      // Inicio una transacción para registrar las inscripciones
+      await sails.getDatastore('Estudiantil').transaction(async dbh => {
+
+        const arrGM = gm.split(/,/);
+        for (let i=0; i< arrGM.length; i++) {
+          const grupoMateriaId = arrGM[i];
+          const datosGM = horarios.find(h => h.id == grupoMateriaId);
+          if (!datosGM) {
+            throw new Error('No se encuentran datos asociados a la materia solicitada');
+          }
+          const recursa = datosUltCurso.UltCursoId === '142 '+datosGM.GradoId+('  '+datosGM.OrientacionId).substr(0,2)+('  '+datosGM.OpcionId).substr(0,2);
+
+          await Inscripciones.agregoInscripcionCurso(dependId, persona.id, grupoMateriaId, datosGM.GradoId, datosGM.OrientacionId, datosGM.OpcionId, fechaInicioCurso, datosUltCurso.DependId, datosUltCurso.PlanId, datosUltCurso.UltCursoId, recursa);
+        }
+      });
+
       viewdata.persona = await Personas.findOne({PaisCod:'UY',DocCod:'CI',PerDocId:cedula});
       viewdata.dependDesc = await Dependencias.dependDesc(dependId);
 			viewdata.asignaturas = await Asignaturas.asignaturasPlan(14);
-			const horarios = await Horarios.get(dependId, fechaInicioCurso);
       viewdata.misHorarios = gm.split(/,/).map(grupoMateriaId => horarios.find(h => h.id==grupoMateriaId));
+
     } catch (e) {
       viewdata.mensaje = e.message;
     }
@@ -229,4 +257,4 @@ function calcFechaInicioCurso() {
 function calcFechaVencimiento() {
   const hoy = new Date();
   return new Date(hoy.getTime() + 24*60*60*1000 * (hoy.getDay()==6 ? 3 : hoy.getDay()>=4 ? 4 : 2));
-}
+};
