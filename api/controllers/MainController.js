@@ -153,7 +153,7 @@ module.exports = {
       dependId: dependId,
       fecha: (new Date()).fechahora_toString(),
       vencimiento: calcFechaVencimiento().fecha_toString(),
-      inscripcionId: '',
+      inscripcionesId: '',
       persona: {},
       dependDesc: '',
       asignaturas: [],
@@ -177,6 +177,8 @@ module.exports = {
         throw new Error('No se encuentran datos del último curso');
       }
 
+      let inscripciones = [];
+
       // Inicio una transacción para registrar las inscripciones
       await sails.getDatastore('Estudiantil').transaction(async dbh => {
 
@@ -189,10 +191,17 @@ module.exports = {
           }
           const recursa = datosUltCurso.UltCursoId === '142 '+datosGM.GradoId+('  '+datosGM.OrientacionId).substr(0,2)+('  '+datosGM.OpcionId).substr(0,2);
 
-          await Inscripciones.agregoInscripcionCurso(dependId, persona.id, grupoMateriaId, datosGM.GradoId, datosGM.OrientacionId, datosGM.OpcionId, fechaInicioCurso, datosUltCurso.DependId, datosUltCurso.PlanId, datosUltCurso.UltCursoId, recursa);
+          const id = await Inscripciones.agregoInscripcionCurso(dbh, dependId, persona.id, grupoMateriaId, datosGM.GradoId, datosGM.OrientacionId, datosGM.OpcionId, fechaInicioCurso, datosUltCurso.DependId, datosUltCurso.PlanId, datosUltCurso.UltCursoId, recursa);
+
+          const cant = await Inscripciones.activas(dbh, persona.id, datosGM.GradoId, datosGM.OrientacionId, datosGM.OpcionId, fechaInicioCurso);
+          if (cant > 1) {
+            throw new Error("Hay inscripciones repetidas para el grado "+datosGM.GradoId);
+          }
+          inscripciones.push( id );
         }
       });
 
+      viewdata.inscripcionesId = inscripciones.join(',');
       viewdata.persona = await Personas.findOne({PaisCod:'UY',DocCod:'CI',PerDocId:cedula});
       viewdata.dependDesc = await Dependencias.dependDesc(dependId);
 			viewdata.asignaturas = await Asignaturas.asignaturasPlan(14);

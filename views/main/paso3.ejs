@@ -15,8 +15,8 @@ var misHorarios = <%- JSON.stringify(misHorarios) %>;
         <input type="text" class="form-control" id="dependDesc" value="<%= dependDesc %>" disabled="disabled">
         <label for="nombre">Fecha</label>
         <input type="text" class="form-control" id="fecha" value="<%= fecha %>" disabled="disabled">
-        <label for="nombre">Número de inscripción</label>
-        <input type="text" class="form-control" id="InscripcionId" value="<%= inscripcionId %>" disabled="disabled">
+        <label for="nombre">Números de inscripción</label>
+        <input type="text" class="form-control" id="InscripcionesId" value="<%= inscripcionesId %>" disabled="disabled">
 
 <div class="card mt-5">
   <div class="card-header bg-success text-white">Materias solicitadas</div>
@@ -57,7 +57,7 @@ function download() {
        var img=canvas.toDataURL("image/png");
        var doc = new jsPDF();
        doc.addImage(img,'JPEG',20,20);
-       doc.save('comprobante-<%- inscripcionId %>.pdf');
+       doc.save('comprobante-<%- inscripcionesId %>.pdf');
      }
    );
   /*
@@ -70,7 +70,7 @@ function download() {
   var doc = new jsPDF({format:'a4'});
   doc.html(document.body, {
    callback: function (doc) {
-     doc.save('comprobante-<%- inscripcionId %>.pdf');
+     doc.save('comprobante-<%- inscripcionesId %>.pdf');
    }
   });
   */

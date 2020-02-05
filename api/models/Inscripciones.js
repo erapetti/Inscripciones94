@@ -12,7 +12,7 @@ module.exports = {
   tableName: 'INSCRIPCIONES',
   primaryKey: 'id',
   attributes: {
-          id: { type:'number', columnName:'InscripcionId', required:true, unique:true, autoIncrement:true },
+          id: { type:'number', columnName:'InscripcionId', autoIncrement:true },
           EtapasInscriId: 'number',
           EstadosInscriId: 'number',
           DependId: { model: 'Dependencias' },
@@ -32,12 +32,12 @@ module.exports = {
           TipoModalidadId: 'number',
           Semestre: 'number',
           InscriObservacion: 'string',
-          FormaIngresoId: 'number',
+          FormaIngresoId: { type:'number', allowNull:true },
           UsuarioInscriId: 'string',
           AdultoIdInscri1: 'number',
           AdultoIdInscri2: 'number',
           InscripcionFlgRecursa: 'number',
-          InscriTurnoId: 'string',
+          InscriTurnoId: { type:'string', allowNull:true },
   },
 
   ultCurso: async function(perId) {
@@ -48,16 +48,32 @@ module.exports = {
       order by FechaInicioCurso DESC,CicloId DESC,GradoId DESC,InscripcionId DESC
     `, [perId]);
 
-    if (!result) {
+    if (!result || !result.rows[0]) {
       return undefined;
     }
 
-    return result.rows;
+    return result.rows[0];
   },
 
-  agregoInscripcionCurso: async function(dependId, perId, grupoMateriaId, gradoId, orientacionId, opcionId, fechaInicioCurso, ultDependId, ultPlanId, ultCursoId, recursa) {
-    const inscripcion = {
-      EtapasInscriId: 27,
+  // posible id base para un nuevo insert en INSCRIPCIONES. Si está duplicado probar con el siguiente
+  nextId: async function(dbh) {
+    const result = await this.getDatastore().sendNativeQuery(`
+      select ifnull(max(inscripcionid),10000000) InscripcionId
+      from INSCRIPCIONES
+      where InscripcionId>=10000000
+        and InscripcionId<=19999999
+    `).usingConnection(dbh);
+
+    if (!result || !result.rows[0] || result.rows[0].InscripcionId==19999999) {
+      return undefined;
+    }
+    return result.rows[0].InscripcionId;
+  },
+
+  agregoInscripcionCurso: async function(dbh, dependId, perId, grupoMateriaId, gradoId, orientacionId, opcionId, fechaInicioCurso, ultDependId, ultPlanId, ultCursoId, recursa) {
+
+    let inscripcion = {
+      EtapasInscriId: 15,
       EstadosInscriId: 4,
       DependId: dependId,
       LugarId: dependId,
@@ -77,11 +93,47 @@ module.exports = {
       UltPlanId: ultPlanId,
       UltCursoId: ultCursoId,
       InscripcionFlgRecursa: recursa,
+      InscriTurnoId: null,
+      FormaIngresoId: null,
     };
 
-    sails.log(inscripcion);
-    sails.log( await this.create(inscripcion).fetch() );
-throw new Error("test error");
+    let id = await Inscripciones.nextId(dbh);
+    if (!id) {
+      throw new Error("No hay más números disponibles para realizar inscripciones");
+    }
+
+    let result;
+    for (let intento = 0; intento<10; intento++, id++) {
+      try {
+        inscripcion.id = id;
+        inscripcion.InscripcionId = id; // por las dudas
+        result = await this.create(inscripcion).fetch().usingConnection(dbh);
+        break;
+      } catch(e) {
+        if (e.code === 'E_UNIQUE') {
+        } else {
+          throw e;
+        }
+      }
+    }
+    return id;
   },
 
+  activas: async function(dbh, perId, gradoId, orientacionId, opcionId, fechaInicioCurso) {
+    const result = await this.getDatastore().sendNativeQuery(`
+      select count(*) cant
+      from INSCRIPCIONES
+      where PerId = $1
+        and GradoId = $2
+        and OrientacionId = $3
+        and OpcionId = $4
+        and FechaInicioCurso = $5
+        and EstadosInscriId < 5
+    `,[perId, gradoId, orientacionId, opcionId, fechaInicioCurso]).usingConnection(dbh);
+
+    if (!result || !result.rows[0]) {
+      return undefined;
+    }
+    return result.rows[0].cant;
+  },
 };
