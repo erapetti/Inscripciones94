@@ -27,7 +27,7 @@ var misHorarios = <%- JSON.stringify(misHorarios) %>;
       <div class="card-header">Plan 1994 - <%- horario.GradoId %>º BD<% if (horario.OrientacionId>1 && horario.OpcionId==1) { %> - <%- orientaciones.find(function(o){return o.id==horario.OrientacionId}).OrientacionDesc %><% } %><% if (horario.OpcionId>1) { %> - <%- opciones.find(function(o){return o.id==horario.OpcionId}).OpcionDesc %><% } %></div>
       <div class="card-body">
         <p>
-          <%- horario.MateriaNombre %> - <%- horario.TipoDictadoDesc %> - <%- horario.TipoDuracionDesc %> - <%- horario.GrupoMateriaDesc %> (<%- horario.id %>)<br>
+          <%- horario.MateriaNombre %> - <%- horario.TipoDictadoDesc %> - <%- horario.TipoDuracionDesc %> - <%- horario.GrupoMateriaDesc %> (<%- horario.GrupoMateriaId %>)<br>
           <%- horario.Horarios.replace(/,/g,', ') %>
         </p>
       </div>
@@ -48,7 +48,11 @@ var misHorarios = <%- JSON.stringify(misHorarios) %>;
 <button class="btn btn-primary mt-3 mb-3 d-print-none" id="print" onClick="window.print()">Imprimir solicitud</button>
 <button class="btn btn-primary mt-3 mb-3 mr-3 d-print-none" id="download" onclick="download()">Descargar comprobante</button>
 
-<button class="btn btn-danger mt-3 mb-3 d-print-none" id="anular">Anular solicitud</button>
+<form method="post" action="<%= sails.config.custom.basePath %>/main/anular">
+  <input type="hidden" name="inscripcionesId" value="<%- inscripcionesId %>">
+  <input type="hidden" name="cedula" value="<%- cedula %>">
+  <button class="btn btn-danger mt-3 mb-3 d-print-none" id="anular">Anular solicitud</button>
+</form>
 
 <script>
 function download() {

@@ -114,6 +114,7 @@ module.exports = {
       dependDesc: '',
       asignaturas: [],
       horarios: [],
+      vacantes: [],
     };
 
     const fechaInicioCurso = calcFechaInicioCurso();
@@ -141,7 +142,11 @@ module.exports = {
   paso3: async function(req,res) {
     const cedula = (req.param('cedula','') || '').checkFormat(/[\d.,;-]+/);
     const dependId = (req.param('dependid') || '').checkFormat(/\d+/);
-    const gm = (req.param('gm') || '').checkFormat(/[\d,]+/);
+    let gm;
+    try {
+      gm = JSON.parse((req.param('gm') || '').checkFormat(/[,\[\]\{\}:"'A-Za-z0-9]+/));
+    } catch(ignore) { }
+
     if (!cedula || !dependId || !gm) {
       return res.redirect(sails.config.custom.basePath+'/');
     }
@@ -177,41 +182,60 @@ module.exports = {
         throw new Error('No se encuentran datos del último curso');
       }
 
+      const activas = await Inscripciones.activas(persona.id, fechaInicioCurso);
       let inscripciones = [];
 
       // Inicio una transacción para registrar las inscripciones
       await sails.getDatastore('Estudiantil').transaction(async dbh => {
 
-        const arrGM = gm.split(/,/);
-        for (let i=0; i< arrGM.length; i++) {
-          const grupoMateriaId = arrGM[i];
-          const datosGM = horarios.find(h => h.id == grupoMateriaId);
-          if (!datosGM) {
-            throw new Error('No se encuentran datos asociados a la materia solicitada');
-          }
+        sails.log(gm);
+        for (let i=0; i<gm.length; i++) {
+          const datosGM = gm[i];
+          sails.log(datosGM);
+          const grupoMateriaId = datosGM.GrupoMateriaId;
           const recursa = datosUltCurso.UltCursoId === '142 '+datosGM.GradoId+('  '+datosGM.OrientacionId).substr(0,2)+('  '+datosGM.OpcionId).substr(0,2);
+          const curso = datosGM.GradoId+'ª'+(datosGM.GradoId==2 ? ' '+viewdata.orientaciones.find(o=>o.id==datosGM.OrientacionId).OrientacionDesc : (datosGM.GradoId==3 ? ' '+viewdata.opciones.find(o=>o.id==datosGM.OpcionId).OpcionDesc : ''));
 
-          const id = await Inscripciones.agregoInscripcionCurso(dbh, dependId, persona.id, grupoMateriaId, datosGM.GradoId, datosGM.OrientacionId, datosGM.OpcionId, fechaInicioCurso, datosUltCurso.DependId, datosUltCurso.PlanId, datosUltCurso.UltCursoId, recursa);
+          const anterior = activas.find(i => i.UsuarioInscriId=='web' && i.GradoId==datosGM.GradoId && (i.GradoId==2 && i.OrientacionId==datosGM.OrientacionId || i.GradoId==3 && i.OpcionId==datosGM.OpcionId));
+          let id;
 
-          const cant = await Inscripciones.activas(dbh, persona.id, datosGM.GradoId, datosGM.OrientacionId, datosGM.OpcionId, fechaInicioCurso);
-          if (cant > 1) {
-            throw new Error("Hay inscripciones repetidas para el grado "+datosGM.GradoId);
+//          if (!valida) {
+//            throw new Error("Ya tienes una inscripción activa en "+curso);
+//          }
+
+          if (!anterior) {
+            // no hay una inscripción que pueda reusar, agrego una nueva
+            id = await Inscripciones.agregoInscripcionCurso(dbh, dependId, persona.id, grupoMateriaId, datosGM.GradoId, datosGM.OrientacionId, datosGM.OpcionId, fechaInicioCurso, datosUltCurso.DependId, datosUltCurso.PlanId, datosUltCurso.UltCursoId, recursa);
+          } else {
+            id = anterior.id;
           }
+
           inscripciones.push( id );
+          throw new Error("inscripcion "+id);
+          viewdata.misHorarios.push( horarios.find(h => h.id==grupoMateriaId && h.GradoId==datosGM.GradoId && (datosGM.GradoId==2 && h.OrientacionId==datosGM.OrientacionId || datosGM.GradoId==3 && h.OpcionId==datosGM.OpcionId)) );
         }
+
       });
 
       viewdata.inscripcionesId = inscripciones.join(',');
       viewdata.persona = await Personas.findOne({PaisCod:'UY',DocCod:'CI',PerDocId:cedula});
       viewdata.dependDesc = await Dependencias.dependDesc(dependId);
 			viewdata.asignaturas = await Asignaturas.asignaturasPlan(14);
-      viewdata.misHorarios = gm.split(/,/).map(grupoMateriaId => horarios.find(h => h.id==grupoMateriaId));
 
     } catch (e) {
       viewdata.mensaje = e.message;
     }
 
     return res.view(viewdata);
+  },
+
+/*                               _
+                __ _ _ __  _   _| | __ _ _ __
+               / _` | '_ \| | | | |/ _` | '__|
+              | (_| | | | | |_| | | (_| | |
+               \__,_|_| |_|\__,_|_|\__,_|_|
+*/
+  anular: async function(req,res) {
   },
 
 };

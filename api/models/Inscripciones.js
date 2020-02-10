@@ -58,7 +58,7 @@ module.exports = {
   // posible id base para un nuevo insert en INSCRIPCIONES. Si está duplicado probar con el siguiente
   nextId: async function(dbh) {
     const result = await this.getDatastore().sendNativeQuery(`
-      select ifnull(max(inscripcionid),10000000) InscripcionId
+      select ifnull(max(inscripcionid)+1,10000000) InscripcionId
       from INSCRIPCIONES
       where InscripcionId>=10000000
         and InscripcionId<=19999999
@@ -107,6 +107,7 @@ module.exports = {
       try {
         inscripcion.id = id;
         inscripcion.InscripcionId = id; // por las dudas
+        sails.log(inscripcion);
         result = await this.create(inscripcion).fetch().usingConnection(dbh);
         break;
       } catch(e) {
@@ -119,21 +120,18 @@ module.exports = {
     return id;
   },
 
-  activas: async function(dbh, perId, gradoId, orientacionId, opcionId, fechaInicioCurso) {
+  activas: async function(perId, fechaInicioCurso) {
     const result = await this.getDatastore().sendNativeQuery(`
-      select count(*) cant
+      select InscripcionId id,GradoId, OrientacionId, OpcionId, EstadosInscriId, UsuarioInscriId
       from INSCRIPCIONES
       where PerId = $1
-        and GradoId = $2
-        and OrientacionId = $3
-        and OpcionId = $4
-        and FechaInicioCurso = $5
+        and FechaInicioCurso = $2
         and EstadosInscriId < 5
-    `,[perId, gradoId, orientacionId, opcionId, fechaInicioCurso]).usingConnection(dbh);
+    `,[perId, fechaInicioCurso]);
 
-    if (!result || !result.rows[0]) {
+    if (!result || !result.rows) {
       return undefined;
     }
-    return result.rows[0].cant;
+    return result.rows;
   },
 };

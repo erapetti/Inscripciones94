@@ -14,5 +14,6 @@ module.exports.routes = {
   '/main/paso1': { controller: 'main', action: 'paso1' },
   '/main/paso2': { controller: 'main', action: 'paso2' },
   '/main/paso3': { controller: 'main', action: 'paso3' },
+  '/main/anular': { controller: 'main', action: 'anular' },
 
 };
