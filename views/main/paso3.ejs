@@ -48,10 +48,9 @@ var misHorarios = <%- JSON.stringify(misHorarios) %>;
 <button class="btn btn-primary mt-3 mb-3 d-print-none" id="print" onClick="window.print()">Imprimir solicitud</button>
 <button class="btn btn-primary mt-3 mb-3 mr-3 d-print-none" id="download" onclick="download()">Descargar comprobante</button>
 
-<form method="post" action="<%= sails.config.custom.basePath %>/main/anular">
-  <input type="hidden" name="inscripcionesId" value="<%- inscripcionesId %>">
+<form method="post" action="<%= sails.config.custom.basePath %>/main/listado">
   <input type="hidden" name="cedula" value="<%- cedula %>">
-  <button class="btn btn-danger mt-3 mb-3 d-print-none" id="anular">Anular solicitud</button>
+  <button class="btn btn-primary mt-3 mb-3 d-print-none" id="listado">Ver inscripciones</button>
 </form>
 
 <script>

@@ -12,6 +12,7 @@ module.exports = {
     asignaturasPlan: 'I94::AP:',
     horarios: 'I94::H:',
     vacantes: 'I94::V:',
+    grupoCursoMateria: 'I94::GCM:',
   },
 
 };

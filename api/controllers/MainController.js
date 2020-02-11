@@ -214,6 +214,11 @@ module.exports = {
           const grupoMateriaId = datosGM.GrupoMateriaId;
           const recursa = datosUltCurso.UltCursoId === '142 '+datosGM.GradoId+('  '+datosGM.OrientacionId).substr(0,2)+('  '+datosGM.OpcionId).substr(0,2);
           const curso = datosGM.GradoId+'º BD'+(datosGM.GradoId==2 ? ' '+viewdata.orientaciones.find(o=>o.id==datosGM.OrientacionId).OrientacionDesc : (datosGM.GradoId==3 ? ' '+viewdata.opciones.find(o=>o.id==datosGM.OpcionId).OpcionDesc : ''));
+          const grupoCurso = (await GrupoCurso.buscar(grupoMateriaId))[0];
+          if (!grupoCurso) {
+            throw new Error("Error de configuración del curso "+grupoMateriaId);
+          }
+          const grupoCursoId = grupoCurso.id;
 
           const parecidas = activas.filter(i => i.PlanId==14 && i.CicloId==2 && i.GradoId==datosGM.GradoId && (i.GradoId==1 || i.GradoId==2 && i.OrientacionId==datosGM.OrientacionId || i.GradoId==3 && i.OpcionId==datosGM.OpcionId));
 
@@ -234,8 +239,19 @@ module.exports = {
           horariosGM = horarios.find(h => h.GrupoMateriaId==grupoMateriaId && h.GradoId==datosGM.GradoId && (datosGM.GradoId==1 || datosGM.GradoId==2 && h.OrientacionId==datosGM.OrientacionId || datosGM.GradoId==3 && h.OpcionId==datosGM.OpcionId));
           viewdata.misHorarios.push( horariosGM );
 
-          sails.log(id, horariosGM.MateriaId, horariosGM.TipoDuracionDesc, horariosGM.TipoDuracionId);
+const auxVacantes1 = await Cupos.vacantes(1003,fechaInicioCurso,100);
+sails.log("vacantes iniciales",auxVacantes1.find(v => v.GrupoMateriaId==horariosGM.GrupoMateriaId));
+
+          sails.log("nueva InscripcionesMaterias",id, horariosGM.MateriaId, horariosGM.TipoDuracionDesc, horariosGM.TipoDuracionId);
           await InscripcionesMaterias.agrego(dbh, id, horariosGM.MateriaId, horariosGM.TipoDuracionId);
+          sails.log("nueva InscripcionesGrupoCurso",id, grupoCursoId);
+          await InscripcionesGrupoCurso.agrego(dbh, id, grupoCursoId);
+          sails.log("nueva AlumnosGrupoMateria",id, horariosGM.MateriaId, horariosGM.GrupoMateriaId, grupoCursoId);
+          await AlumnosGrupoMateria.agrego(dbh, id, horariosGM.MateriaId, horariosGM.GrupoMateriaId, grupoCursoId);
+
+const auxVacantes = await Cupos.vacantes(1003,fechaInicioCurso,100);
+sails.log("vacantes finales",auxVacantes.find(v => v.GrupoMateriaId==horariosGM.GrupoMateriaId));
+throw new Error("termina");
         }
 
         sails.log("termina");
@@ -261,6 +277,58 @@ module.exports = {
                \__,_|_| |_|\__,_|_|\__,_|_|
 */
   anular: async function(req,res) {
+
+    const cedula = (req.param('cedula','') || '').checkFormat(/[\d.,;-]+/);
+    const gm = (req.param('gm') || '').checkFormat(/\d+/);
+
+    let resp = { error: '' };
+
+    if (!cedula || !gm) {
+      resp.error = 'Parámetros incorrectos';
+      return res.json(resp);
+    }
+
+    const fechaInicioCurso = calcFechaInicioCurso();
+
+    try {
+      Inscripciones.borrar(gm,cedula,fechaInicioCurso);
+
+    } catch (e) {
+      resp.error = e.message;
+    }
+
+    return res.json(resp);
+  },
+
+/*              _ _     _            _
+               | (_)___| |_ __ _  __| | ___
+               | | / __| __/ _` |/ _` |/ _ \
+               | | \__ \ || (_| | (_| | (_) |
+               |_|_|___/\__\__,_|\__,_|\___/
+*/
+  listado: async function(req,res) {
+
+    const cedula = (req.param('cedula','') || '').checkFormat(/[\d.,;-]+/);
+
+    if (!cedula) {
+      return res.redirect(sails.config.custom.basePath+'/');
+    }
+
+    let viewdata = {
+      title: "Inscripciones para Plan 1994<small> (turno nocturno)</small>",
+      id: "listado",
+      cedula: cedula,
+    };
+
+    const fechaInicioCurso = calcFechaInicioCurso();
+
+    try {
+      Inscripciones.listado(cedula,fechaInicioCurso);
+    } catch (e) {
+      viewdata.mensaje = e.message;
+    }
+
+    return res.view(viewdata);
   },
 
 };

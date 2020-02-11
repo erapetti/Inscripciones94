@@ -66,15 +66,15 @@ module.exports = {
         order by 4,2
         `, [desde, hasta]);
 
-      if (result) {
+        if (!result) {
+          return undefined;
+        }
+
         try {
           await sails.memcached.Set(memkey, result.rows, sails.config.memcachedTTL);
         } catch (ignore) { }
 
         return result.rows;
-      } else {
-        return undefined;
-      }
     }
   },
 };
