@@ -122,7 +122,7 @@ module.exports = {
 
   activas: async function(perId, fechaInicioCurso) {
     const result = await this.getDatastore().sendNativeQuery(`
-      select InscripcionId id,GradoId, OrientacionId, OpcionId, EstadosInscriId, UsuarioInscriId
+      select InscripcionId id, PlanId, CicloId, GradoId, OrientacionId, OpcionId, Semestre, EstadosInscriId, UsuarioInscriId
       from INSCRIPCIONES
       where PerId = $1
         and FechaInicioCurso = $2
@@ -134,4 +134,28 @@ module.exports = {
     }
     return result.rows;
   },
+
+  GMactivas: async function(inscripciones) {
+    const result = await this.getDatastore().sendNativeQuery(`
+      SELECT GrupoMateriaId, PlanId, CicloId, GradoId, OrientacionId, OpcionId, Semestre, EstadosInscriId, AsignId
+      FROM INSCRIPCIONES
+      JOIN INSCRIPCIONES_MATERIAS USING (InscripcionId)
+      JOIN INSCRIPCIONES_GRUPOCURSO USING (InscripcionId)
+      JOIN GRUPOCURSOMATERIA USING (GrupoCursoId)
+      JOIN GRUPOMATERIA USING (GrupoMateriaId)
+      JOIN ASIGNATURAS_MATERIAS USING (MateriaId)
+      WHERE InscripcionId in (`+inscripciones.join(',')+`)
+        AND GrupoMateriaMateriaId=MateriaId
+        AND InscripcionGrupoCursoActivo=1
+        AND GrupoCursoMateriaActivo=1
+        AND GrupoMateriaFchHasta>'2019-04-01' -- curdate()
+      `);
+
+    if (!result || !result.rows) {
+      return undefined;
+    }
+    return result.rows;
+  },
+
+
 };

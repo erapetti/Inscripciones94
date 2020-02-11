@@ -31,7 +31,7 @@
       <select class="custom-select has-feedback" id="grado" name="grado" onChange="updateCGOOA()">
         <option selected disabled>Elija un grado...</option>
         <option value="1">1º BD (4º)</option>
-        <option value="2">2º BD (5ª)</option>
+        <option value="2">2º BD (5º)</option>
         <option value="3">3º BD (6º)</option>
       </select>
 
@@ -99,7 +99,7 @@
     <input type="hidden" name="cedula" value="<%= cedula %>">
     <input type="hidden" name="dependid" value="<%= dependId %>">
     <input type="hidden" name="gm" id="gm">
-    <button type="button" class="btn btn-primary my-3" id="btn-materias" onclick="verZonaMatrias()">Agregar otra materia</button>
+    <button type="button" class="btn btn-primary my-3" id="btn-materias" onclick="verZonaMaterias()">Agregar otra materia</button>
     <button type="submit" class="btn btn-primary my-3" id="inscribirse" disabled>Solicitar inscripción</button>
   </form>
 </div>
@@ -236,7 +236,7 @@ function agregarHorario() {
   misHorarios.push( horarios.find(function(h) { return h.id==id }) );
   verHorarios();
   verMisHorarios();
-  validar(misHorarios);
+  validar(misHorarios, orientaciones, opciones);
   $('#mensaje-ok').html('La materia fue agregada a tu selección').show();
   setTimeout(function(){$('#mensaje-ok').hide(1000)}, 5000);
   updateCGOOA();
@@ -249,9 +249,9 @@ function sacarHorario() {
       misHorarios.splice(i, 1);
     }
   }
-  verHorarios();
+  //verHorarios();
   verMisHorarios();
-  validar(misHorarios);
+  validar(misHorarios, orientaciones, opciones);
 };
 
 function verMisHorarios() {
@@ -268,7 +268,7 @@ function verMisHorarios() {
   $('#misHorarios button').click(sacarHorario);
 };
 
-function verZonaMatrias() {
+function verZonaMaterias() {
   $('#zona-materias').removeClass("d-none");
   $('#zona-horarios').addClass("d-none");
   updateCGOOA();
@@ -279,8 +279,8 @@ function verZonaHorarios() {
   $('#zona-horarios').removeClass("d-none");
 }
 
-function validar(misHorarios) {
-  var error = [];
+function validar(misHorarios, orientaciones, opciones) {
+  var errores = [];
   var cantHoras = 0;
   var grados = {};
   var orientacionesDiferentes = {};
@@ -291,7 +291,7 @@ function validar(misHorarios) {
   var materias = { 'Teórico':{}, 'Práctico':{} };
   misHorarios.forEach(function(m) {
     materias[m.TipoDictadoDesc][m.MateriaNombre] = 1;
-    cantHoras += m.Horarios.split(/,/).length;
+    cantHoras += m.Horarios ? m.Horarios.split(/,/).length : 0;
     grados[m.GradoId] = 1;
     if (m.GradoId==2 && m.OrientacionId && m.OrientacionId != 1) {
       orientacionesDiferentes[orientaciones.find(function(o){return o.id==m.OrientacionId}).OrientacionDesc] = 1
@@ -299,39 +299,40 @@ function validar(misHorarios) {
     if (m.GradoId==3 && m.OpcionId && m.OpcionId != 1) {
       opcionesDiferentes[opciones.find(function(o){return o.id==m.OpcionId}).OpcionDesc] = 1
     }
-    if (m.TipoDictadoDesc == 'Teórico') {
+    if (m.TipoDictadoDesc != 'Práctico') {
       asignaturasDiferentes[m.AsignId] = (asignaturasDiferentes[m.AsignId]+1) || 1;
     }
   });
+
   for (var materia in materias['Práctico']) {
     if (typeof materias['Teórico'][materia] === 'undefined') {
-      error.push('Falta agregar un teórico de '+materia);
+      errores.push('Falta agregar un teórico de '+materia);
     }
   }
 
   // valido la cantidad total de horas
   if (cantHoras > 38) {
-    error.push('Has superado el tope de 38 horas de clase');
+    errores.push('Has superado el tope de 38 horas de clase');
   }
   // valido la cantidad de grados
   if (Object.keys(grados).length > 2) {
-    error.push('El Plan de estudios no permite inscripciones en más de dos grados o niveles (Art. 4)');
+    errores.push('El Plan de estudios no permite inscripciones en más de dos grados o niveles (Art. 4)');
   }
   // valido la cantidad de orientaciones
   if (Object.keys(orientacionesDiferentes).length > 2) {
-    error.push('El Plan de estudios no permite inscripciones en más de dos orientaciones (Art. 4): '+Object.keys(orientacionesDiferentes).join(', '));
+    errores.push('El Plan de estudios no permite inscripciones en más de dos orientaciones (Art. 4): '+Object.keys(orientacionesDiferentes).join(', '));
   }
   // valido la cantidad de opciones
   if (Object.keys(opcionesDiferentes).length > 2) {
-    error.push('El Plan de estudios no permite inscripciones en más de dos opciones (Art. 4): '+Object.keys(opcionesDiferentes).join(', '));
+    errores.push('El Plan de estudios no permite inscripciones en más de dos opciones (Art. 4): '+Object.keys(opcionesDiferentes).join(', '));
   }
   // valido materias correlativas
   if (Object.values(asignaturasDiferentes).reduce(function(v,m){ return v || m>1 }, false)) {
-    error.push('No se permiten inscripciones a materias correlativas en el formulario web (Art. 8)');
+    errores.push('No se permiten inscripciones a materias correlativas en el formulario web (Art. 8)');
   }
 
   // muestro un mensaje con el resultado de la validación
-  mensaje(error.join('<br>'));
+  mensaje(errores.join('<br>'));
 
   $('#btn-horarios .badge').html(misHorarios.length);
   if (misHorarios.length) {
@@ -340,9 +341,8 @@ function validar(misHorarios) {
     $('#btn-horarios').attr('disabled','disabled');
   }
 
-  $('#inscribirse').attr('disabled', (misHorarios.length>0 && error.length == 0 ? null : 'disabled'));
+  $('#inscribirse').attr('disabled', (misHorarios.length>0 && errores.length == 0 ? null : 'disabled'));
   $('#gm').val( JSON.stringify(misHorarios.map(function(m){return {GrupoMateriaId:m.GrupoMateriaId, GradoId:m.GradoId, OrientacionId:m.OrientacionId, OpcionId:m.OpcionId}})) );
-  console.log($('#gm').val());
 };
 
 function mensaje(texto) {

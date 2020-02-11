@@ -182,38 +182,63 @@ module.exports = {
         throw new Error('No se encuentran datos del último curso');
       }
 
+      let misHorarios = gm.map(gmi => horarios.find(h => h.GrupoMateriaId==gmi.GrupoMateriaId));
+
       const activas = await Inscripciones.activas(persona.id, fechaInicioCurso);
+      let cursosActivos;
+      if (activas && activas.length>0) {
+        cursosActivos = await Inscripciones.GMactivas(activas.map(a => a.id));
+        for (let c=0; c<cursosActivos.length; c++) {
+          if (horarios.find(h => h.GrupoMateriaId==cursosActivos[c].GrupoMateriaId)) {
+            misHorarios.push( horarios.find(h => h.GrupoMateriaId==cursosActivos[c].GrupoMateriaId) );
+          } else {
+            // no encontré el horario pero igual lo agrego para tenerlo en cuenta al validar
+            misHorarios.push( cursosActivos[c] );
+          }
+        }
+      }
+
+      const errores = validar(misHorarios, viewdata.orientaciones, viewdata.opciones);
+      if (errores.length) {
+        throw new Error(errores.join('<br>'));
+      }
+
       let inscripciones = [];
 
       // Inicio una transacción para registrar las inscripciones
       await sails.getDatastore('Estudiantil').transaction(async dbh => {
 
-        sails.log(gm);
+        // para cada grupoMateria solicitado lo inscribo si es necesario
         for (let i=0; i<gm.length; i++) {
           const datosGM = gm[i];
-          sails.log(datosGM);
           const grupoMateriaId = datosGM.GrupoMateriaId;
           const recursa = datosUltCurso.UltCursoId === '142 '+datosGM.GradoId+('  '+datosGM.OrientacionId).substr(0,2)+('  '+datosGM.OpcionId).substr(0,2);
-          const curso = datosGM.GradoId+'ª'+(datosGM.GradoId==2 ? ' '+viewdata.orientaciones.find(o=>o.id==datosGM.OrientacionId).OrientacionDesc : (datosGM.GradoId==3 ? ' '+viewdata.opciones.find(o=>o.id==datosGM.OpcionId).OpcionDesc : ''));
+          const curso = datosGM.GradoId+'º BD'+(datosGM.GradoId==2 ? ' '+viewdata.orientaciones.find(o=>o.id==datosGM.OrientacionId).OrientacionDesc : (datosGM.GradoId==3 ? ' '+viewdata.opciones.find(o=>o.id==datosGM.OpcionId).OpcionDesc : ''));
 
-          const anterior = activas.find(i => i.UsuarioInscriId=='web' && i.GradoId==datosGM.GradoId && (i.GradoId==2 && i.OrientacionId==datosGM.OrientacionId || i.GradoId==3 && i.OpcionId==datosGM.OpcionId));
+          const parecidas = activas.filter(i => i.PlanId==14 && i.CicloId==2 && i.GradoId==datosGM.GradoId && (i.GradoId==1 || i.GradoId==2 && i.OrientacionId==datosGM.OrientacionId || i.GradoId==3 && i.OpcionId==datosGM.OpcionId));
+
           let id;
-
-//          if (!valida) {
-//            throw new Error("Ya tienes una inscripción activa en "+curso);
-//          }
-
-          if (!anterior) {
-            // no hay una inscripción que pueda reusar, agrego una nueva
+          if (!parecidas.length) {
+            // no hay una inscripción que pueda reutilizar, agrego una nueva
             id = await Inscripciones.agregoInscripcionCurso(dbh, dependId, persona.id, grupoMateriaId, datosGM.GradoId, datosGM.OrientacionId, datosGM.OpcionId, fechaInicioCurso, datosUltCurso.DependId, datosUltCurso.PlanId, datosUltCurso.UltCursoId, recursa);
           } else {
-            id = anterior.id;
+            if (parecidas.find(i => i.UsuarioInscriId !== 'web')) {
+              throw new Error('Tienes una inscripción activa en '+datosGM.GradoId+'º BD que no se inició vía web, no puedes agregarle materias usando este formulario');
+            }
+
+            // tengo una inscripción para reutilizar
+            id = parecidas[0].id;
           }
 
           inscripciones.push( id );
-          throw new Error("inscripcion "+id);
-          viewdata.misHorarios.push( horarios.find(h => h.id==grupoMateriaId && h.GradoId==datosGM.GradoId && (datosGM.GradoId==2 && h.OrientacionId==datosGM.OrientacionId || datosGM.GradoId==3 && h.OpcionId==datosGM.OpcionId)) );
+          horariosGM = horarios.find(h => h.GrupoMateriaId==grupoMateriaId && h.GradoId==datosGM.GradoId && (datosGM.GradoId==1 || datosGM.GradoId==2 && h.OrientacionId==datosGM.OrientacionId || datosGM.GradoId==3 && h.OpcionId==datosGM.OpcionId));
+          viewdata.misHorarios.push( horariosGM );
+
+          sails.log(id, horariosGM.MateriaId, horariosGM.TipoDuracionDesc, horariosGM.TipoDuracionId);
+          await InscripcionesMaterias.agrego(dbh, id, horariosGM.MateriaId, horariosGM.TipoDuracionId);
         }
+
+        sails.log("termina");
 
       });
 
@@ -290,4 +315,60 @@ function calcFechaInicioCurso() {
 function calcFechaVencimiento() {
   const hoy = new Date();
   return new Date(hoy.getTime() + 24*60*60*1000 * (hoy.getDay()==6 ? 3 : hoy.getDay()>=4 ? 4 : 2));
+};
+
+// tomado de paso2
+function validar(misHorarios,orientaciones,opciones) {
+  var errores = [];
+  var cantHoras = 0;
+  var grados = {};
+  var orientacionesDiferentes = {};
+  var opcionesDiferentes = {};
+  var asignaturasDiferentes = {};
+
+  // valido que cada práctico tenga su teórico:
+  var materias = { 'Teórico':{}, 'Práctico':{} };
+  misHorarios.forEach(function(m) {
+//    materias[m.TipoDictadoDesc][m.MateriaNombre] = 1;
+    cantHoras += m.Horarios ? m.Horarios.split(/,/).length : 0;
+    grados[m.GradoId] = 1;
+    if (m.GradoId==2 && m.OrientacionId && m.OrientacionId != 1) {
+      orientacionesDiferentes[orientaciones.find(function(o){return o.id==m.OrientacionId}).OrientacionDesc] = 1
+    }
+    if (m.GradoId==3 && m.OpcionId && m.OpcionId != 1) {
+      opcionesDiferentes[opciones.find(function(o){return o.id==m.OpcionId}).OpcionDesc] = 1
+    }
+    if (m.TipoDictadoDesc != 'Práctico') {
+      asignaturasDiferentes[m.AsignId] = (asignaturasDiferentes[m.AsignId]+1) || 1;
+    }
+  });
+/*
+  for (var materia in materias['Práctico']) {
+    if (typeof materias['Teórico'][materia] === 'undefined') {
+      errores.push('Falta agregar un teórico de '+materia);
+    }
+  }
+*/
+  // valido la cantidad total de horas
+  if (cantHoras > 38) {
+    errores.push('Has superado el tope de 38 horas de clase');
+  }
+  // valido la cantidad de grados
+  if (Object.keys(grados).length > 2) {
+    errores.push('El Plan de estudios no permite inscripciones en más de dos grados o niveles (Art. 4)');
+  }
+  // valido la cantidad de orientaciones
+  if (Object.keys(orientacionesDiferentes).length > 2) {
+    errores.push('El Plan de estudios no permite inscripciones en más de dos orientaciones (Art. 4): '+Object.keys(orientacionesDiferentes).join(', '));
+  }
+  // valido la cantidad de opciones
+  if (Object.keys(opcionesDiferentes).length > 2) {
+    errores.push('El Plan de estudios no permite inscripciones en más de dos opciones (Art. 4): '+Object.keys(opcionesDiferentes).join(', '));
+  }
+  // valido materias correlativas
+  if (Object.values(asignaturasDiferentes).reduce(function(v,m){ return v || m>1 }, false)) {
+    errores.push('No se permiten inscripciones a materias correlativas en el formulario web (Art. 8)');
+  }
+
+  return errores;
 };
