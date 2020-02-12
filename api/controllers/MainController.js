@@ -236,27 +236,14 @@ module.exports = {
           }
 
           inscripciones.push( id );
-          horariosGM = horarios.find(h => h.GrupoMateriaId==grupoMateriaId && h.GradoId==datosGM.GradoId && (datosGM.GradoId==1 || datosGM.GradoId==2 && h.OrientacionId==datosGM.OrientacionId || datosGM.GradoId==3 && h.OpcionId==datosGM.OpcionId));
+          const horariosGM = horarios.find(h => h.GrupoMateriaId==grupoMateriaId && h.GradoId==datosGM.GradoId && (datosGM.GradoId==1 || datosGM.GradoId==2 && h.OrientacionId==datosGM.OrientacionId || datosGM.GradoId==3 && h.OpcionId==datosGM.OpcionId));
           viewdata.misHorarios.push( horariosGM );
 
-const auxVacantes1 = await Cupos.vacantes(1003,fechaInicioCurso,100);
-sails.log("vacantes iniciales",auxVacantes1.find(v => v.GrupoMateriaId==horariosGM.GrupoMateriaId));
-
-          sails.log("nueva InscripcionesMaterias",id, horariosGM.MateriaId, horariosGM.TipoDuracionDesc, horariosGM.TipoDuracionId);
           await InscripcionesMaterias.agrego(dbh, id, horariosGM.MateriaId, horariosGM.TipoDuracionId);
-          sails.log("nueva InscripcionesGrupoCurso",id, grupoCursoId);
           await InscripcionesGrupoCurso.agrego(dbh, id, grupoCursoId);
-          sails.log("nueva AlumnosGrupoMateria",id, horariosGM.MateriaId, horariosGM.GrupoMateriaId, grupoCursoId);
           await AlumnosGrupoMateria.agrego(dbh, id, horariosGM.MateriaId, horariosGM.GrupoMateriaId, grupoCursoId);
-
-const auxVacantes = await Cupos.vacantes(1003,fechaInicioCurso,100);
-sails.log("vacantes finales",auxVacantes.find(v => v.GrupoMateriaId==horariosGM.GrupoMateriaId));
-throw new Error("termina");
         }
-
-        sails.log("termina");
-
-      });
+      }); // termina la transacción
 
       viewdata.inscripcionesId = inscripciones.join(',');
       viewdata.persona = await Personas.findOne({PaisCod:'UY',DocCod:'CI',PerDocId:cedula});

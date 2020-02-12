@@ -95,6 +95,8 @@ module.exports = {
       InscripcionFlgRecursa: recursa,
       InscriTurnoId: null,
       FormaIngresoId: null,
+      Inscripciones_FchUltAct: new Date(),
+      Inscripciones_UsrUltAct: 'web',
     };
 
     let id = await Inscripciones.nextId(dbh);

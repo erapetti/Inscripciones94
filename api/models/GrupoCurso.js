@@ -43,6 +43,7 @@ module.exports = {
         from GRUPOCURSOMATERIA
         join GRUPOCURSO USING (GrupoCursoId)
         where GrupoMateriaId = $1
+          and GrupoCursoMateriaActivo = 1
         order by GrupoCursoFchDesde DESC
       `, [grupoMateriaId]);
 

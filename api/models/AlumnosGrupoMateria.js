@@ -26,6 +26,7 @@ module.exports = {
       MateriaId: materiaId,
       GrupoMateriaId: grupoMateriaId,
       GrupoCursoId: grupoCursoId,
+      AlumnoGrupoMateriaActivo: 1,
     };
 
     await this.create(alumnoGrupoMateria).usingConnection(dbh);
