@@ -1,0 +1,59 @@
+<div id="zona-horarios" class="d-none">
+
+  <div class="card mt-3">
+    <div class="card-header bg-success text-white">Inscripciones</div>
+    <div class="card-body">
+
+      <div class="table-responsive d-none my-3" id="misHorarios">
+        <table class="table">
+          <thead>
+            <tr><th>Materia</th><th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th><th>Sábado</th><th class="d-print-none"></th></tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+var misHorarios = <%- JSON.stringify(misHorarios) %>;
+
+function formatoHorario(horario, disabled, btnClass, btnText, ultimosLugares) {
+  var html = '<tr'+(disabled ? ' class="disabled"' : '')+'>';
+  html += '<td>'+horario.MateriaNombre+' de '+horario.GradoId+'º BD<br>'+horario.TipoDictadoDesc+'<br>'+horario.TipoDuracionDesc+'<br><small>('+horario.GrupoMateriaId+')</small></td>';
+console.log(horario);
+  var arrHorarios = {'LUN':[],'MAR':[],'MIE':[],'JUE':[],'VIE':[],'SAB':[]};
+  horario.Horarios.split(/,/).forEach(function(hd) {
+    arrHorarios[hd.substr(0,3)].push( hd.substr(4) );
+  });
+  for (d in arrHorarios) {
+    html += '<td>'+arrHorarios[d].join('<br>')+'</td>';
+  }
+
+  if (btnText) {
+    html += '<td class="d-print-none">'+(disabled ? '('+disabled+')' : '<button class="btn '+btnClass+'" data-id='+horario.id+'>'+btnText+'</button>'+(ultimosLugares ? '<br><span class="text-danger small">¡Últimos lugares!</span>' : ''))+'</td>';
+  }
+  html += '</tr>';
+  return html;
+};
+
+function verMisHorarios() {
+  var body = [];
+  misHorarios.forEach(function(m) {
+    body.push( formatoHorario(m, false, 'btn-danger', 'Anular', false) );
+  });
+  $('#misHorarios tbody').html(body.join(''));
+  $('#misHorarios button').click(anular);
+};
+
+function anular() {
+
+};
+
+window.onload = function(){
+  verMisHorarios();
+}
+</script>

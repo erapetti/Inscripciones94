@@ -124,7 +124,7 @@ module.exports = {
 
   activas: async function(perId, fechaInicioCurso) {
     const result = await this.getDatastore().sendNativeQuery(`
-      select InscripcionId id, PlanId, CicloId, GradoId, OrientacionId, OpcionId, Semestre, EstadosInscriId, UsuarioInscriId
+      select InscripcionId id, DependId, PlanId, CicloId, GradoId, OrientacionId, OpcionId, Semestre, EstadosInscriId, UsuarioInscriId
       from INSCRIPCIONES
       where PerId = $1
         and FechaInicioCurso = $2

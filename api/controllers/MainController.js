@@ -305,12 +305,36 @@ module.exports = {
       title: "Inscripciones para Plan 1994<small> (turno nocturno)</small>",
       id: "listado",
       cedula: cedula,
+      misHorarios: [],
     };
 
     const fechaInicioCurso = calcFechaInicioCurso();
 
     try {
-      Inscripciones.listado(cedula,fechaInicioCurso);
+      const persona = await Personas.findOne({PaisCod:'UY',DocCod:'CI',PerDocId:cedula});
+      if (!persona) {
+        throw new Error('No se encuentran datos asociados al número de cédula');
+      }
+
+      viewdata.inscripciones = await AlumnosGrupoMateria.activas(persona.id, fechaInicioCurso);
+      if (!viewdata.inscripciones || viewdata.inscripciones.length==0) {
+        throw new Error("No se encontraron inscripciones activas");
+      }
+
+      let horarios = {};
+
+      // junto los horarios de las materias en las cuales está inscripto:
+      for (let i=0; i<viewdata.inscripciones.length; i++) {
+        const datosGM = viewdata.inscripciones[i];
+sails.log("inscripción",datosGM);
+        if (typeof horarios[datosGM.DependId] === 'undefined') {
+          horarios[datosGM.DependId] = await Horarios.get(datosGM.DependId, fechaInicioCurso);
+        }
+
+        viewdata.misHorarios.push( horarios[datosGM.DependId].find(h => h.GrupoMateriaId==datosGM.GrupoMateriaId&& h.GradoId==datosGM.GradoId && (datosGM.GradoId==1 || datosGM.GradoId==2 && h.OrientacionId==datosGM.OrientacionId || datosGM.GradoId==3 && h.OpcionId==datosGM.OpcionId)) );
+      }
+      sails.log(viewdata.misHorarios);
+
     } catch (e) {
       viewdata.mensaje = e.message;
     }
