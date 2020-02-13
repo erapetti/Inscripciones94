@@ -477,6 +477,7 @@ async function misHorariosActivos(perId) {
     return misHorarios;
   }
 
+sails.log("inscripciones",inscripciones);
   let horarios = {};
 
   // junto los horarios de las materias en las cuales está inscripto:
@@ -487,6 +488,7 @@ async function misHorariosActivos(perId) {
     }
 
     let h = horarios[datosGM.DependId].find(h => h.GrupoMateriaId==datosGM.GrupoMateriaId && h.GradoId==datosGM.GradoId && (datosGM.GradoId==1 || datosGM.GradoId==2 && h.OrientacionId==datosGM.OrientacionId || datosGM.GradoId==3 && h.OpcionId==datosGM.OpcionId));
+sails.log("horarios",h);
     h.EstadosInscriId = datosGM.EstadosInscriId;
     h.InscripcionId = datosGM.id;
     misHorarios.push( h );

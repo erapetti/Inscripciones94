@@ -257,7 +257,7 @@ function sacarHorario() {
 function verMisHorarios() {
   var body = [];
   misHorarios.forEach(function(m) {
-    body.push( formatoFilaHorarios(m, false, 'btn-danger', !m.EstadosInscriId || m.EstadosInscriId==4 ? 'Sacar' : '', false) );
+    body.push( formatoFilaHorarios(m, false, 'btn-danger', !m.EstadosInscriId ? 'Sacar' : '', false) );
   });
   $('#misHorarios tbody').html(body.join(''));
   if (misHorarios.length > 0) {
