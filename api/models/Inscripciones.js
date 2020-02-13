@@ -159,5 +159,9 @@ module.exports = {
     return result.rows;
   },
 
+  recursa: async function(perId,planId,cicloId,gradoId,orientacionId,opcionId,fechaInicioCurso) {
+    const result = await this.findOne({EstadosInscriId:{'<':5},FechaInicioCurso:{'<':fechaInicioCurso},PerId:perId,PlanId:planId,CicloId:cicloId,GradoId:gradoId,OrientacionId:orientacionId,OpcionId:opcionId});
 
+    return !!result;
+  },
 };

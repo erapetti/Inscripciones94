@@ -32,4 +32,23 @@ module.exports = {
     await this.create(inscripcionMateria).usingConnection(dbh);
     return;
   },
+
+  sync: async function(dbh, inscripcionId, materias) {
+
+    const inscripciones = await this.find(inscripcionId).usingConnection(dbh);
+
+    // materias que faltan:
+    materias.forEach(m => {
+      if (!inscripciones.find(i => i.MateriaId==m.materiaId)) {
+        await this.agrego(dbh, inscripcionId, m.materiaId, m.tipoDuracionId);
+      }
+    });
+
+    //materias que sobran:
+    inscripciones.forEach(i => {
+      if (!materias.find(m => m.materiaId==i.MateriaId)) {
+        await this.delete({id:inscripcionId,MateriaId:i.MateriaId}).usingConnection(dbh);
+      }
+    });
+  },
 };

@@ -51,6 +51,7 @@ module.exports = {
     let viewdata = {
       title: "Inscripciones para Plan 1994<small> (turno nocturno)</small>",
       id: "paso1",
+      mensaje: undefined,
       cedula: cedula,
     };
     try {
@@ -109,21 +110,29 @@ module.exports = {
 		let viewdata = {
 			title: "Inscripciones para Plan 1994<small> (turno nocturno)</small>",
       id: "paso2",
+      mensaje: undefined,
 			cedula: cedula,
 			dependId: dependId,
       dependDesc: '',
       asignaturas: [],
       horarios: [],
       vacantes: [],
+      misHorarios: [],
     };
 
     const fechaInicioCurso = calcFechaInicioCurso();
 
     try {
+      const persona = await Personas.findOne({PaisCod:'UY',DocCod:'CI',PerDocId:cedula});
+      if (!persona) {
+        throw new Error('No se encuentran datos asociados al número de cédula');
+      }
+
 			viewdata.dependDesc = await Dependencias.dependDesc(dependId);
 			viewdata.asignaturas = await Asignaturas.asignaturasPlan(14);
 			viewdata.horarios = await Horarios.get(dependId, fechaInicioCurso);
       viewdata.vacantes = await Cupos.vacantes(dependId, fechaInicioCurso, sails.config.custom.cupoPorMateria);
+      viewdata.misHorarios = await misHorariosActivos(persona.id);
 
     } catch (e) {
       viewdata.mensaje = e.message;
@@ -146,7 +155,7 @@ module.exports = {
     try {
       gm = JSON.parse((req.param('gm') || '').checkFormat(/[,\[\]\{\}:"'A-Za-z0-9]+/));
     } catch(ignore) { }
-
+sails.log("gm",gm);
     if (!cedula || !dependId || !gm) {
       return res.redirect(sails.config.custom.basePath+'/');
     }
@@ -154,6 +163,7 @@ module.exports = {
     let viewdata = {
       title: "Inscripciones para Plan 1994<small> (turno nocturno)</small>",
       id: "paso3",
+      mensaje: undefined,
       cedula: cedula,
       dependId: dependId,
       fecha: (new Date()).fechahora_toString(),
@@ -170,21 +180,56 @@ module.exports = {
     const fechaInicioCurso = calcFechaInicioCurso();
 
     try {
-      const persona = await Personas.findOne({PaisCod:'UY',DocCod:'CI',PerDocId:cedula});
-      if (!persona) {
+      viewdata.persona = await Personas.findOne({PaisCod:'UY',DocCod:'CI',PerDocId:cedula});
+      if (!viewdata.persona) {
         throw new Error('No se encuentran datos asociados al número de cédula');
       }
-
-      const horarios = await Horarios.get(dependId, fechaInicioCurso);
-
-      const datosUltCurso = await Inscripciones.ultCurso(persona.id);
+      const perId = viewdata.persona.id;
+sails.log("persona",viewdata.persona);
+      viewdata.misHorarios = await misHorariosActivos(perId);
+sails.log("misHorarios",viewdata.misHorarios);
+      const datosUltCurso = await Inscripciones.ultCurso(perId);
       if (!datosUltCurso) {
         throw new Error('No se encuentran datos del último curso');
       }
 
-      let misHorarios = gm.map(gmi => horarios.find(h => h.GrupoMateriaId==gmi.GrupoMateriaId));
+      // Inicio una transacción para registrar las inscripciones
+      await sails.getDatastore('Estudiantil').transaction(async dbh => {
 
-      const activas = await Inscripciones.activas(persona.id, fechaInicioCurso);
+        // para cada grupoMateria solicitado lo inscribo si es necesario
+        for (let i=0; i<gm.length; i++) {
+          sails.log("inscribo a ",perId,"en",gm[i], fechaInicioCurso, datosUltCurso);
+          const inscripcionId = await inscribir(dbh, perId, dependId, gm[i], fechaInicioCurso, datosUltCurso);
+
+          inscripciones.push( inscripcionId );
+          const horariosGM = await Horarios.buscar(dependId,gm[i].GrupoMateriaId,gm[i].GradoId,gm[i].OrientacionId,gm[i].OpcionId,fechaInicioCurso);
+sails.log("horariosGM",horariosGM);
+          // const horariosGM = horarios.find(h => h.GrupoMateriaId==grupoMateriaId && h.GradoId==datosGM.GradoId && (datosGM.GradoId==1 || datosGM.GradoId==2 && h.OrientacionId==datosGM.OrientacionId || datosGM.GradoId==3 && h.OpcionId==datosGM.OpcionId));
+          viewdata.misHorarios.push( horariosGM );
+
+        }
+        throw new Error("termina");
+
+        const errores = validar(misHorarios, viewdata.orientaciones, viewdata.opciones);
+        if (errores.length) {
+          throw new Error(errores.join('<br>'));
+        }
+      });
+
+      throw new Error("termina");
+/*
+      const horarios = await Horarios.get(dependId, fechaInicioCurso);
+
+      const datosUltCurso = await Inscripciones.ultCurso(perId);
+      if (!datosUltCurso) {
+        throw new Error('No se encuentran datos del último curso');
+      }
+
+      let misHorarios = misHorariosActivos(perId);
+      sails.log("revisar filtro por GrupoMateriaId", gm);
+      misHorarios.concat( gm.map(gmi => horarios.find(h => h.GrupoMateriaId==gmi.GrupoMateriaId)) );
+
+      const activas = await Inscripciones.activas(perId, fechaInicioCurso);
       let cursosActivos;
       if (activas && activas.length>0) {
         cursosActivos = await Inscripciones.GMactivas(activas.map(a => a.id));
@@ -210,43 +255,12 @@ module.exports = {
 
         // para cada grupoMateria solicitado lo inscribo si es necesario
         for (let i=0; i<gm.length; i++) {
-          const datosGM = gm[i];
-          const grupoMateriaId = datosGM.GrupoMateriaId;
-          const recursa = datosUltCurso.UltCursoId === '142 '+datosGM.GradoId+('  '+datosGM.OrientacionId).substr(0,2)+('  '+datosGM.OpcionId).substr(0,2);
-          const curso = datosGM.GradoId+'º BD'+(datosGM.GradoId==2 ? ' '+viewdata.orientaciones.find(o=>o.id==datosGM.OrientacionId).OrientacionDesc : (datosGM.GradoId==3 ? ' '+viewdata.opciones.find(o=>o.id==datosGM.OpcionId).OpcionDesc : ''));
-          const grupoCurso = (await GrupoCurso.buscar(grupoMateriaId))[0];
-          if (!grupoCurso) {
-            throw new Error("Error de configuración del curso "+grupoMateriaId);
-          }
-          const grupoCursoId = grupoCurso.id;
-
-          const parecidas = activas.filter(i => i.PlanId==14 && i.CicloId==2 && i.GradoId==datosGM.GradoId && (i.GradoId==1 || i.GradoId==2 && i.OrientacionId==datosGM.OrientacionId || i.GradoId==3 && i.OpcionId==datosGM.OpcionId));
-
-          let id;
-          if (!parecidas.length) {
-            // no hay una inscripción que pueda reutilizar, agrego una nueva
-            id = await Inscripciones.agregoInscripcionCurso(dbh, dependId, persona.id, grupoMateriaId, datosGM.GradoId, datosGM.OrientacionId, datosGM.OpcionId, fechaInicioCurso, datosUltCurso.DependId, datosUltCurso.PlanId, datosUltCurso.UltCursoId, recursa);
-          } else {
-            if (parecidas.find(i => i.UsuarioInscriId !== 'web')) {
-              throw new Error('Tienes una inscripción activa en '+datosGM.GradoId+'º BD que no se inició vía web, no puedes agregarle materias usando este formulario');
-            }
-
-            // tengo una inscripción para reutilizar
-            id = parecidas[0].id;
-          }
-
-          inscripciones.push( id );
-          const horariosGM = horarios.find(h => h.GrupoMateriaId==grupoMateriaId && h.GradoId==datosGM.GradoId && (datosGM.GradoId==1 || datosGM.GradoId==2 && h.OrientacionId==datosGM.OrientacionId || datosGM.GradoId==3 && h.OpcionId==datosGM.OpcionId));
-          viewdata.misHorarios.push( horariosGM );
-
-          await InscripcionesMaterias.agrego(dbh, id, horariosGM.MateriaId, horariosGM.TipoDuracionId);
-          await InscripcionesGrupoCurso.agrego(dbh, id, grupoCursoId);
-          await AlumnosGrupoMateria.agrego(dbh, id, horariosGM.MateriaId, horariosGM.GrupoMateriaId, grupoCursoId);
         }
       }); // termina la transacción
+*/
 
       viewdata.inscripcionesId = inscripciones.join(',');
-      viewdata.persona = await Personas.findOne({PaisCod:'UY',DocCod:'CI',PerDocId:cedula});
+      viewdata.persona = persona;
       viewdata.dependDesc = await Dependencias.dependDesc(dependId);
 			viewdata.asignaturas = await Asignaturas.asignaturasPlan(14);
 
@@ -304,6 +318,7 @@ module.exports = {
     let viewdata = {
       title: "Inscripciones para Plan 1994<small> (turno nocturno)</small>",
       id: "listado",
+      mensaje: undefined,
       cedula: cedula,
       misHorarios: [],
     };
@@ -450,4 +465,68 @@ function validar(misHorarios,orientaciones,opciones) {
   }
 
   return errores;
+};
+
+async function misHorariosActivos(perId) {
+  let misHorarios = [];
+
+  const fechaInicioCurso = calcFechaInicioCurso();
+
+  const inscripciones = await AlumnosGrupoMateria.activas(perId, fechaInicioCurso);
+  if (!inscripciones) {
+    return misHorarios;
+  }
+
+  let horarios = {};
+
+  // junto los horarios de las materias en las cuales está inscripto:
+  for (let i=0; i<inscripciones.length; i++) {
+    const datosGM = inscripciones[i];
+    if (typeof horarios[datosGM.DependId] === 'undefined') {
+      horarios[datosGM.DependId] = await Horarios.get(datosGM.DependId, fechaInicioCurso);
+    }
+
+    let h = horarios[datosGM.DependId].find(h => h.GrupoMateriaId==datosGM.GrupoMateriaId && h.GradoId==datosGM.GradoId && (datosGM.GradoId==1 || datosGM.GradoId==2 && h.OrientacionId==datosGM.OrientacionId || datosGM.GradoId==3 && h.OpcionId==datosGM.OpcionId));
+    h.EstadosInscriId = datosGM.EstadosInscriId;
+    h.InscripcionId = datosGM.id;
+    misHorarios.push( h );
+  }
+
+  return misHorarios;
+};
+
+async function inscribir(dbh,perId,dependId,datosGM,fechaInicioCurso,datosUltCurso) {
+
+  let inscripcionId;
+
+  const grupoMateriaId = datosGM.GrupoMateriaId;
+  const recursa = await Inscripciones.recursa(perId,datosGM.PlanId,datosGM.CicloId,datosGM.GradoId,datosGM.OrientacionId,datosGM.OpcionId,fechaInicioCurso);
+  const grupoCurso = (await GrupoCurso.buscar(grupoMateriaId))[0];
+  if (!grupoCurso) {
+    throw new Error("Error de configuración del curso "+grupoMateriaId);
+  }
+  const grupoCursoId = grupoCurso.id;
+
+sails.log("grupoMateriaId",grupoMateriaId);
+sails.log("recursa",recursa);
+sails.log("grupoCurso",grupoCurso);
+
+  const activas = await Inscripciones.activas(perId, fechaInicioCurso);
+  const parecidas = activas.filter(i => i.PlanId==14 && i.CicloId==2 && i.GradoId==datosGM.GradoId && (i.GradoId==1 || i.GradoId==2 && i.OrientacionId==datosGM.OrientacionId || i.GradoId==3 && i.OpcionId==datosGM.OpcionId));
+
+  if (!parecidas.length) {
+    // no hay una inscripción que pueda reutilizar, agrego una nueva
+    inscripcionId = await Inscripciones.agregoInscripcionCurso(dbh, dependId, perId, grupoMateriaId, datosGM.GradoId, datosGM.OrientacionId, datosGM.OpcionId, fechaInicioCurso, datosUltCurso.DependId, datosUltCurso.PlanId, datosUltCurso.UltCursoId, recursa);
+  } else {
+    // tengo una inscripción para reutilizar
+    inscripcionId = parecidas[0].id;
+  }
+
+  const horariosGM = await Horarios.buscar(dependId, datosGM.GrupoMateriaId, datosGM.GradoId, datosGM.OrientacionId, datosGM.OpcionId, fechaInicioCurso);
+sails.log("horariosGM",horariosGM);
+sails.log("agrego inscripcionmateria",inscripcionId, horariosGM.MateriaId, horariosGM.TipoDuracionId);
+  await InscripcionesMaterias.sync(dbh, inscripcionId, horariosGM.MateriaId, horariosGM.TipoDuracionId);
+  await InscripcionesGrupoCurso.agrego(dbh, inscripcionId, grupoCursoId);
+  await AlumnosGrupoMateria.agrego(dbh, inscripcionId, horariosGM.MateriaId, horariosGM.GrupoMateriaId, grupoCursoId);
+  throw new Error("sale inscribir",inscripcionId);
 };

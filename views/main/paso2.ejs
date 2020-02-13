@@ -91,7 +91,7 @@
         </table>
       </div>
 
-      <p>Cuando elijas todas las materias puedes realizar la inscripción a los cursos.</p>
+      <p>Al terminar de elegir todas las materias debes usar el botón para solicitar la inscripción.</p>
     </div>
   </div>
 
@@ -112,7 +112,7 @@ var orientaciones = [ {id:15,OrientacionDesc:'Humanístico'},{id:16,OrientacionD
 var opciones = [ {id:13,OpcionDesc:'Derecho',OrientacionId:15},{id:14,OpcionDesc:'Economía',OrientacionId:15},{id:15,OpcionDesc:'Agronomía',OrientacionId:16},{id:16,OpcionDesc:'Medicina',OrientacionId:16},{id:17,OpcionDesc:'Arquitectura',OrientacionId:17},{id:18,OpcionDesc:'Ingeniería',OrientacionId:17} ];
 var horarios = <%- JSON.stringify(horarios) %>;
 var vacantes = <%- JSON.stringify(vacantes) %>;
-var misHorarios = [];
+var misHorarios = <%- JSON.stringify(misHorarios) %>;
 
 function update_asignatura() {
   var gradoId = $('#grado').val();
@@ -171,7 +171,7 @@ function updateCGOOA() {
   update_asignatura();
 };
 
-function formatoHorario(horario, disabled, btnClass, btnText, ultimosLugares) {
+function formatoFilaHorarios(horario, disabled, btnClass, btnText, ultimosLugares) {
   var html = '<tr'+(disabled ? ' class="disabled"' : '')+'>';
   html += '<td>'+horario.MateriaNombre+' de '+horario.GradoId+'º BD<br>'+horario.TipoDictadoDesc+'<br>'+horario.TipoDuracionDesc+'<br><small>('+horario.GrupoMateriaId+')</small></td>';
 
@@ -199,14 +199,14 @@ function verHorarios() {
   var body = [];
   horarios.forEach(function(h) {
     var conQuienSolapa = solapada(h.Horarios, misHorarios);
-    var objHayVacantes = vacantes.find(function(v){return v.GrupoMateriaId==h.id});
-    var hayVacantes = objHayVacantes ? objHayVacantes.vacantes : 10;
+    var objHayVacantes = vacantes.find(function(v){return v.GrupoMateriaId==h.GrupoMateriaId});
+    var hayVacantes = objHayVacantes ? objHayVacantes.vacantes : <%- sails.config.custom.cupoPorMateria %>;
     var disabled = misHorarios.find(function(m){return m.MateriaId==h.MateriaId && m.TipoDictadoDesc==h.TipoDictadoDesc}) ? 'ya agregada' :
-                     conQuienSolapa.length>0 ? 'se solapa con '+conQuienSolapa.join(', ') :
-                       hayVacantes < 1 ? 'no hay vacantes' :
+                     conQuienSolapa.length > 0 ? 'se solapa con '+conQuienSolapa.join(', ') :
+                       hayVacantes <= 0 ? 'no hay vacantes' :
                          undefined;
     if (h.GradoId == gradoId && (!orientacionId || h.OrientacionId == orientacionId) && (!opcionId || h.OpcionId == opcionId) && h.AsignId == asignId) {
-      body.push( formatoHorario(h, disabled, 'btn-primary', 'Agregar', hayVacantes<5) );
+      body.push( formatoFilaHorarios(h, disabled, 'btn-primary', 'Agregar', hayVacantes<5) );
     }
   });
 
@@ -257,15 +257,21 @@ function sacarHorario() {
 function verMisHorarios() {
   var body = [];
   misHorarios.forEach(function(m) {
-    body.push( formatoHorario(m, false, 'btn-danger', 'Sacar', false) );
+    body.push( formatoFilaHorarios(m, false, 'btn-danger', !m.EstadosInscriId || m.EstadosInscriId==4 ? 'Sacar' : '', false) );
   });
   $('#misHorarios tbody').html(body.join(''));
   if (misHorarios.length > 0) {
     $('#misHorarios').removeClass('d-none');
+    $('#btn-horarios').removeAttr('disabled');
   } else {
     $('#misHorarios').addClass('d-none');
+    $('#btn-horarios').attr('disabled','disabled');
   }
   $('#misHorarios button').click(sacarHorario);
+
+  $('#btn-horarios .badge').html(misHorarios.length);
+  $('#inscribirse').attr('disabled', (misHorarios.length>0 && $('#mensaje').html().length == 0 ? null : 'disabled'));
+  $('#gm').val( JSON.stringify(misHorarios.map(function(m){return {GrupoMateriaId:m.GrupoMateriaId, GradoId:m.GradoId, OrientacionId:m.OrientacionId, OpcionId:m.OpcionId}})) );
 };
 
 function verZonaMaterias() {
@@ -333,16 +339,6 @@ function validar(misHorarios, orientaciones, opciones) {
 
   // muestro un mensaje con el resultado de la validación
   mensaje(errores.join('<br>'));
-
-  $('#btn-horarios .badge').html(misHorarios.length);
-  if (misHorarios.length) {
-    $('#btn-horarios').removeAttr('disabled');
-  } else {
-    $('#btn-horarios').attr('disabled','disabled');
-  }
-
-  $('#inscribirse').attr('disabled', (misHorarios.length>0 && errores.length == 0 ? null : 'disabled'));
-  $('#gm').val( JSON.stringify(misHorarios.map(function(m){return {GrupoMateriaId:m.GrupoMateriaId, GradoId:m.GradoId, OrientacionId:m.OrientacionId, OpcionId:m.OpcionId}})) );
 };
 
 function mensaje(texto) {
@@ -356,6 +352,6 @@ function mensaje(texto) {
 
 window.onload = function(){
   updateCGOOA();
-  $('#btn-horarios').attr('disabled','disabled');
+  verMisHorarios();
 };
 </script>

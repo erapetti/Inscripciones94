@@ -15,7 +15,7 @@ var misHorarios = <%- JSON.stringify(misHorarios) %>;
         <input type="text" class="form-control" id="dependDesc" value="<%= dependDesc %>" disabled="disabled">
         <label for="nombre">Fecha</label>
         <input type="text" class="form-control" id="fecha" value="<%= fecha %>" disabled="disabled">
-        <label for="nombre">Números de inscripción</label>
+        <label for="nombre">Número<%= inscripcionesId.indexOf(',')>0 ? 's' : '' %> de inscripción</label>
         <input type="text" class="form-control" id="InscripcionesId" value="<%= inscripcionesId %>" disabled="disabled">
 
 <div class="card mt-5">
