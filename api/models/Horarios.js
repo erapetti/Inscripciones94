@@ -84,17 +84,10 @@ module.exports = {
 
   buscar: async function(dependId,grupoMateriaId,gradoId,orientacionId,opcionId,fechaInicioCurso) {
 
-    if (!this.cache_horarios) {
-      this.cache_horarios = [];
-    }
-    if (!this.cache_horarios[fechaInicioCurso]) {
-      this.cache_horarios[fechaInicioCurso] = [];
-    }
-    if (!this.cache_horarios[fechaInicioCurso][dependId]) {
-      this.cache_horarios[fechaInicioCurso][dependId] = await this.get(dependId,fechaInicioCurso);
+    const horarios = await this.get(dependId,fechaInicioCurso);
     }
     const id = grupoMateriaId+':'+gradoId+':'+orientacionId+':'+opcionId;
-    return this.cache_horarios[fechaInicioCurso][dependId].find(h => h.id==id);
+    return horarios.find(h => h.id==id);
   },
 
 };

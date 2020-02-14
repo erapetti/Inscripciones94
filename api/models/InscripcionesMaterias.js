@@ -38,14 +38,14 @@ module.exports = {
     const inscripciones = await this.find(inscripcionId).usingConnection(dbh);
 
     // materias que faltan:
-    materias.forEach(async m => {
+    await materias.forEach(async m => {
       if (!inscripciones.find(i => i.MateriaId==m.materiaId)) {
         await this.agrego(dbh, inscripcionId, m.materiaId, m.tipoDuracionId);
       }
     });
 
     //materias que sobran:
-    inscripciones.forEach(async i => {
+    await inscripciones.forEach(async i => {
       if (!materias.find(m => m.materiaId==i.MateriaId)) {
         await this.delete({id:inscripcionId,MateriaId:i.MateriaId}).usingConnection(dbh);
       }

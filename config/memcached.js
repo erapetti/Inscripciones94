@@ -13,6 +13,7 @@ module.exports = {
     horarios: 'I94::H:',
     vacantes: 'I94::V:',
     grupoCursoMateria: 'I94::GCM:',
+    grupoMateria: 'I94::GM:',
   },
 
 };
