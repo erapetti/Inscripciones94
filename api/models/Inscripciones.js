@@ -78,10 +78,12 @@ module.exports = {
 
   ultCurso: async function(perId) {
     const result = await this.getDatastore().sendNativeQuery(`
-      select DependId, PlanId, CONCAT(PLANID,CICLOID,RIGHT(CONCAT('  ',GRADOID),2),RIGHT(CONCAT('  ',ORIENTACIONID),2),RIGHT(CONCAT('  ',OPCIONID),2)) UltCursoId
+      select DependId,
+             PlanId,
+             CONCAT(RIGHT(CONCAT('    ',PLANID),4),CICLOID,RIGHT(CONCAT('  ',GRADOID),2),RIGHT(CONCAT('  ',ORIENTACIONID),2),RIGHT(CONCAT('  ',OPCIONID),2)) UltCursoId
       from INSCRIPCIONES
       where PerId = $1
-      order by FechaInicioCurso DESC,CicloId DESC,GradoId DESC,InscripcionId DESC
+      order by CicloId DESC,GradoId+if(PlanId=14,3,0) DESC,FechaInicioCurso DESC,CicloId DESC,GradoId DESC,InscripcionId DESC
     `, [perId]);
 
     if (!result || !result.rows[0]) {
