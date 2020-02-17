@@ -23,7 +23,7 @@ module.exports.custom = {
   cupoPorMateria: 40,
   cupoPorPractico: 20,
   maximoDiario: 400,
-  minInscripcionId: 10000000,
-  maxInscripcionId: 19999999,
+  minInscripcionId: 11000000,
+  maxInscripcionId: 11999999,
   horarioLiceo: '19:30 a 23:00',
 };
