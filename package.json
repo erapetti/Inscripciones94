@@ -15,7 +15,6 @@
     "datatables.net-bs4": "^1.10.20",
     "grunt": "1.0.4",
     "grunt-sync": "^0.8.1",
-    "html2canvas": "^1.0.0-rc.5",
     "jquery": "^3.4.1",
     "jspdf": "^1.5.3",
     "knex": "^0.20.4",

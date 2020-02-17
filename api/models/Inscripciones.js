@@ -57,20 +57,31 @@ module.exports = {
 
   // posible id base para un nuevo insert en INSCRIPCIONES. Si está duplicado probar con el siguiente
   nextId: async function(dbh) {
-    const result = await this.getDatastore().sendNativeQuery(`
-      select ifnull(max(inscripcionid)+1,10000000) InscripcionId
-      from INSCRIPCIONES
-      where InscripcionId>=10000000
-        and InscripcionId<=19999999
-    `).usingConnection(dbh);
+    const hoy = new Date();
+    const memkey = sails.config.prefix.hechasHoy+hoy.fecha_ymd_toString();
 
-    if (!result || !result.rows[0] || result.rows[0].InscripcionId==19999999) {
+    try {
+
+      const result = await sails.memcached.Get(memkey);
+      if (result  > sails.config.custom.maximoDiario) {
+        return undefined;
+      }
+    } catch (ignore) {}
+
+    const result = await this.getDatastore().sendNativeQuery(`
+      select ifnull(max(inscripcionid)+1, $1) InscripcionId
+      from INSCRIPCIONES
+      where InscripcionId >= $1
+        and InscripcionId <= $2
+    `, [sails.config.custom.minInscripcionId, sails.config.custom.maxInscripcionId]).usingConnection(dbh);
+
+    if (!result || !result.rows[0] || result.rows[0].InscripcionId > sails.config.custom.maxInscripcionId) {
       return undefined;
     }
     return result.rows[0].InscripcionId;
   },
 
-  agregoInscripcionCurso: async function(dbh, dependId, perId, grupoMateriaId, gradoId, orientacionId, opcionId, fechaInicioCurso, ultDependId, ultPlanId, ultCursoId, recursa) {
+  agrego: async function(dbh, dependId, perId, grupoMateriaId, gradoId, orientacionId, opcionId, fechaInicioCurso, ultDependId, ultPlanId, ultCursoId, recursa) {
 
     let inscripcion = {
       EtapasInscriId: 15,
@@ -99,27 +110,36 @@ module.exports = {
       Inscripciones_UsrUltAct: 'web',
     };
 
-    let id = await Inscripciones.nextId(dbh);
-    if (!id) {
-      throw new Error("No hay más números disponibles para realizar inscripciones");
-    }
-
-    let result;
     for (let intento = 0; intento<10; intento++, id++) {
       try {
-        inscripcion.id = id;
-        inscripcion.InscripcionId = id; // por las dudas
-        sails.log(inscripcion);
-        result = await this.create(inscripcion).fetch().usingConnection(dbh);
+        inscripcion.id = await Inscripciones.nextId(dbh);
+        if (!inscripcion.id) {
+          throw new Error("Por el día de hoy no hay números disponibles para realizar inscripciones");
+        }
+        inscripcion.InscripcionId = inscripcion.id; // por las dudas
+
+        // tuve que usar fetch porque si no pierdo el contenido de inscripcion:
+        inscripcion = await this.create(inscripcion).fetch().usingConnection(dbh);
+
+        // contabilizo la inscripción aunque: puede estar repetida para la persona, puede ser deshecha por rollback más adelante
+        try {
+          const hoy = new Date();
+          const memkey = sails.config.prefix.hechasHoy+hoy.fecha_ymd_toString();
+          if (! await sails.memcached.Increment(memkey, 1) ) {
+            await this.hechasHoy();
+            await sails.memcached.Increment(memkey, 1);
+          }
+
+        } catch (ignore) { }
+
         break;
       } catch(e) {
-        if (e.code === 'E_UNIQUE') {
-        } else {
+        if (e.code !== 'E_UNIQUE') {
           throw e;
         }
       }
     }
-    return id;
+    return inscripcion.id;
   },
 
   activas: async function(perId, fechaInicioCurso) {
@@ -164,4 +184,38 @@ module.exports = {
 
     return !!result;
   },
+
+  hechasHoy: async function() {
+    const hoy = new Date();
+    const memkey = sails.config.prefix.hechasHoy+hoy.fecha_ymd_toString();
+
+    try {
+
+      const result = await sails.memcached.Get(memkey);
+      if (typeof result === 'undefined') {
+        throw 'CACHE MISS';
+      }
+      return result;
+
+    } catch (e) {
+
+      const result = await this.getDatastore().sendNativeQuery(`
+        select count(*) cant
+        from INSCRIPCIONES
+        where InscripcionId >= $1
+          and InscripcionId <= $2
+          and InscriFecha = curdate()
+      `, [sails.config.custom.minInscripcionId, sails.config.custom.maxInscripcionId]);
+
+      if (!result) {
+        return undefined;
+      }
+      try {
+        await sails.memcached.Set(memkey, result.rows[0], sails.config.memcached15minTTL);
+      } catch (ignore) { }
+
+      return result.rows[0];
+    }
+  },
+
 };

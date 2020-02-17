@@ -85,7 +85,7 @@ module.exports = {
   buscar: async function(dependId,grupoMateriaId,gradoId,orientacionId,opcionId,fechaInicioCurso) {
 
     const horarios = await this.get(dependId,fechaInicioCurso);
-    }
+
     const id = grupoMateriaId+':'+gradoId+':'+orientacionId+':'+opcionId;
     return horarios.find(h => h.id==id);
   },

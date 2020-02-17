@@ -21,4 +21,13 @@ module.exports = {
           PerFchFall: { type:'ref', columnType:'date' },
   },
 
+  buscar: async function (paisCod,docCod,perDocId) {
+
+    const persona = await this.findOne({PaisCod:paisCod,DocCod:docCod,PerDocId:perDocId,or:[{PerFchFall:'1000-01-01'},{PerFchFall:null}]});
+    if (!persona) {
+      throw new Error('El número de cédula ingresado no se encuentra registrado en nuestra base de datos. Verifique que lo escribió correctamente.');
+    }
+
+    return persona;
+  },
 };

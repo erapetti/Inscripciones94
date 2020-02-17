@@ -22,5 +22,7 @@ module.exports.custom = {
 
   cupoPorMateria: 40,
   cupoPorPractico: 20,
-
+  maximoDiario: 400,
+  minInscripcionId: 10000000,
+  maxInscripcionId: 19999999,
 };

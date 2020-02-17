@@ -14,7 +14,7 @@ module.exports = {
           id: { type:'number', columnName:'InscripcionId', required:true }, //dummy
   },
 
-  vacantes: async function(dependId,fechaInicioCurso,cupoPorMateria) {
+  vacantes: async function(dependId,fechaInicioCurso,cupoPorMateria,cupoPorPractico) {
     const memkey = sails.config.prefix.vacantes+fechaInicioCurso+':'+dependId+':'+cupoPorMateria;
     try {
       const result = await sails.memcached.Get(memkey);
@@ -26,16 +26,17 @@ module.exports = {
     } catch(e) {
 
       const result = await this.getDatastore().sendNativeQuery(`
-        select GrupoMateriaId, $3-count(*) vacantes
+        select GrupoMateriaId, GrupoMateriaTipoDictadoId TipoDictadoId, if(GrupoMateriaTipoDictadoId=2,$4,$3)-count(*) vacantes
         from INSCRIPCIONES
         join ALUMNOS_GRUPOMATERIA using (InscripcionId)
+        join GRUPOMATERIA using (GrupoMateriaId)
         where EstadosInscriId < 5
           and AlumnoGrupoMateriaActivo = 1
           and PlanId = 14
           and FechaInicioCurso = $1
           and DependId = $2
-        group by 1
-        `,[fechaInicioCurso, dependId, cupoPorMateria]);
+        group by 1,2
+        `,[fechaInicioCurso, dependId, cupoPorMateria, cupoPorPractico]);
 
         if (!result) {
           return undefined;

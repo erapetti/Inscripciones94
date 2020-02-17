@@ -113,6 +113,8 @@ var opciones = [ {id:13,OpcionDesc:'Derecho',OrientacionId:15},{id:14,OpcionDesc
 var horarios = <%- JSON.stringify(horarios) %>;
 var vacantes = <%- JSON.stringify(vacantes) %>;
 var misHorarios = <%- JSON.stringify(misHorarios) %>;
+var precisanPractico = <%- JSON.stringify(precisanPractico) %>;
+
 
 function update_asignatura() {
   var gradoId = $('#grado').val();
@@ -236,7 +238,7 @@ function agregarHorario() {
   misHorarios.push( horarios.find(function(h) { return h.id==id }) );
   verHorarios();
   verMisHorarios();
-  validar(misHorarios, orientaciones, opciones);
+  validar(misHorarios, orientaciones, opciones, precisanPractico);
   $('#mensaje-ok').html('La materia fue agregada a tu selección').show();
   setTimeout(function(){$('#mensaje-ok').hide(1000)}, 5000);
   updateCGOOA();
@@ -251,7 +253,7 @@ function sacarHorario() {
   }
   //verHorarios();
   verMisHorarios();
-  validar(misHorarios, orientaciones, opciones);
+  validar(misHorarios, orientaciones, opciones, precisanPractico);
 };
 
 function verMisHorarios() {
@@ -269,9 +271,10 @@ function verMisHorarios() {
   }
   $('#misHorarios button').click(sacarHorario);
 
-  $('#btn-horarios .badge').html(misHorarios.length);
-  $('#inscribirse').attr('disabled', (misHorarios.length>0 && $('#mensaje').html().length == 0 ? null : 'disabled'));
-  $('#gm').val( JSON.stringify(misHorarios.map(function(m){return {GrupoMateriaId:m.GrupoMateriaId, GradoId:m.GradoId, OrientacionId:m.OrientacionId, OpcionId:m.OpcionId}})) );
+  var nuevosHorarios = misHorarios.filter(function(h){return !h.InscripcionId});
+  $('#btn-horarios .badge').html(nuevosHorarios.length);
+  $('#inscribirse').attr('disabled', (nuevosHorarios.length>0 && $('#mensaje').html().length == 0 ? null : 'disabled'));
+  $('#gm').val( JSON.stringify(nuevosHorarios.map(function(m){return {GrupoMateriaId:m.GrupoMateriaId, GradoId:m.GradoId, OrientacionId:m.OrientacionId, OpcionId:m.OpcionId}})) );
 };
 
 function verZonaMaterias() {
@@ -285,7 +288,7 @@ function verZonaHorarios() {
   $('#zona-horarios').removeClass("d-none");
 }
 
-function validar(misHorarios, orientaciones, opciones) {
+function validar(misHorarios, orientaciones, opciones, precisanPractico) {
   var errores = [];
   var cantHoras = 0;
   var grados = {};
@@ -294,9 +297,12 @@ function validar(misHorarios, orientaciones, opciones) {
   var asignaturasDiferentes = {};
 
   // valido que cada práctico tenga su teórico:
-  var materias = { 'Teórico':{}, 'Práctico':{} };
+  var materias = { 'Teórico':{}, 'Práctico':{}, 'precisanPractico':{}, };
   misHorarios.forEach(function(m) {
     materias[m.TipoDictadoDesc][m.MateriaNombre] = 1;
+    if (precisanPractico.find(function(pt){ return pt.GradoId==m.GradoId && pt.OrientacionId==m.OrientacionId && pt.OpcionId==m.OpcionId && pt.MateriaId==m.MateriaId})) {
+      materias['precisanPractico'][m.MateriaNombre] = 1;
+    }
     cantHoras += m.Horarios ? m.Horarios.split(/,/).length : 0;
     grados[m.GradoId] = 1;
     if (m.GradoId==2 && m.OrientacionId && m.OrientacionId != 1) {
@@ -315,6 +321,12 @@ function validar(misHorarios, orientaciones, opciones) {
       errores.push('Falta agregar un teórico de '+materia);
     }
   }
+  for (var materia in materias['precisanPractico']) {
+    if (typeof materias['Práctico'][materia] === 'undefined') {
+      errores.push('Falta agregar un práctico de '+materia);
+    }
+  }
+
 
   // valido la cantidad total de horas
   if (cantHoras > 38) {
@@ -339,6 +351,9 @@ function validar(misHorarios, orientaciones, opciones) {
 
   // muestro un mensaje con el resultado de la validación
   mensaje(errores.join('<br>'));
+  if (errores.length > 0) {
+    $('#inscribirse').attr('disabled', 'disabled');
+  }
 };
 
 function mensaje(texto) {

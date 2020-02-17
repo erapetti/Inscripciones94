@@ -15,8 +15,6 @@ var misHorarios = <%- JSON.stringify(misHorarios) %>;
         <input type="text" class="form-control" id="dependDesc" value="<%= dependDesc %>" disabled="disabled">
         <label for="nombre">Fecha</label>
         <input type="text" class="form-control" id="fecha" value="<%= fecha %>" disabled="disabled">
-        <label for="nombre">Número<%= inscripcionesId.indexOf(',')>0 ? 's' : '' %> de inscripción</label>
-        <input type="text" class="form-control" id="InscripcionesId" value="<%= inscripcionesId %>" disabled="disabled">
 
 <div class="card mt-5">
   <div class="card-header bg-success text-white">Materias solicitadas</div>
@@ -24,11 +22,11 @@ var misHorarios = <%- JSON.stringify(misHorarios) %>;
 
 <% misHorarios.forEach(function(horario) { %>
     <div class="card mt-3">
-      <div class="card-header">Plan 1994 - <%- horario.GradoId %>º BD<% if (horario.OrientacionId>1 && horario.OpcionId==1) { %> - <%- orientaciones.find(function(o){return o.id==horario.OrientacionId}).OrientacionDesc %><% } %><% if (horario.OpcionId>1) { %> - <%- opciones.find(function(o){return o.id==horario.OpcionId}).OpcionDesc %><% } %></div>
+      <div class="card-header">Plan 1994 - <%- horario.GradoId %>º BD<% if (horario.OrientacionId>1 && horario.OpcionId==1) { %> - <%- orientaciones.find(function(o){return o.id==horario.OrientacionId}).OrientacionDesc %><% } %><% if (horario.OpcionId>1) { %> - <%- opciones.find(function(o){return o.id==horario.OpcionId}).OpcionDesc %><% } %> (<%- horario.InscripcionId %>)</div>
       <div class="card-body">
         <p>
           <%- horario.MateriaNombre %> - <%- horario.TipoDictadoDesc %> - <%- horario.TipoDuracionDesc %> - <%- horario.GrupoMateriaDesc %> (<%- horario.GrupoMateriaId %>)<br>
-          <%- horario.Horarios.replace(/,/g,', ') %>
+          <%- horario.Horarios ? horario.Horarios.replace(/,/g,', ') : '' %>
         </p>
       </div>
     </div>
@@ -41,7 +39,7 @@ var misHorarios = <%- JSON.stringify(misHorarios) %>;
 
 <div class="alert alert-danger mt-3">
   <p>Esta solicitud de inscripción es válida por 2 días hábiles.<br>
-     Debes confirmarla en liceo <%- dependDesc %> entre hoy y el <%- vencimiento %> en el horario de 19:30 a 23:00.<br>
+     Debes confirmarla en el liceo <%- dependDesc %> entre hoy y el <%- vencimiento %> en el horario de 19:30 a 23:00.<br>
      Pasada esa fecha otro estudiante puede ocupar tu lugar en las materias solicitadas.</p>
 </div>
 
@@ -56,26 +54,17 @@ var misHorarios = <%- JSON.stringify(misHorarios) %>;
 <script>
 function download() {
 
-   html2canvas(document.body, {scale:1, logging:false, windowWidth:500}).then(function(canvas) {
-       var img=canvas.toDataURL("image/png");
-       var doc = new jsPDF();
-       doc.addImage(img,'JPEG',20,20);
-       doc.save('comprobante-<%- inscripcionesId %>.pdf');
-     }
-   );
-  /*
-  var margins = {
-    top: 80,
-    bottom: 60,
-    left: 40,
-    width: 522
-  };
-  var doc = new jsPDF({format:'a4'});
+  $('#paso3 .card-header').css('background-color','#fff');
+  $('#paso3 button').css('visibility','hidden');
+
+  var doc = new jsPDF({unit:'px',format:'a4'});
   doc.html(document.body, {
-   callback: function (doc) {
-     doc.save('comprobante-<%- inscripcionesId %>.pdf');
-   }
+    html2canvas: { scale:0.3,windowWidth:575, },
+    callback: function (doc) {
+      doc.save('comprobante-<%- cedula %>.pdf');
+      $('#paso3 .card-header').css('background-color','');
+      $('#paso3 button').css('visibility','visible');
+   },
   });
-  */
 };
 </script>

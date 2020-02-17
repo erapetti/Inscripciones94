@@ -48,15 +48,51 @@ module.exports = {
           and (IFNULL(GrupoMateriaFchHasta,'1000-01-01')='1000-01-01' OR GrupoMateriaFchHasta >= $2)
       `, [desde,hasta,dependId]);
 
-      if (result) {
-        try {
-          await sails.memcached.Set(memkey, result.rows, sails.config.memcachedTTL);
-        } catch (ignore) { }
-
-        return result.rows;
-      } else {
+      if (!result) {
         return undefined;
       }
+      try {
+        await sails.memcached.Set(memkey, result.rows, sails.config.memcachedTTL);
+      } catch (ignore) { }
+
+      return result.rows;
+    }
+  },
+
+  precisanPractico: async function() {
+    const memkey = sails.config.prefix.precisanPractico;
+
+    try {
+
+      const result = await sails.memcached.Get(memkey);
+      if (typeof result === 'undefined') {
+        throw 'CACHE MISS';
+      }
+      return result;
+
+    } catch (e) {
+
+      const result = await this.getDatastore().sendNativeQuery(`
+        select Curricula_Grado GradoId,
+               Curricula_Orient OrientacionId,
+               Curricula_Opcion OpcionId,
+               CurriculaMateriaId MateriaId
+        from CURRICULA
+        where CurriculaPlanId = 14
+          and Curricula_Ciclo = 2
+          and CurriculaTipoDictadoId = 2
+          and TipoDuracionId = 3
+        group by 1,2,3,4
+      `);
+
+      if (!result) {
+        return undefined;
+      }
+      try {
+        await sails.memcached.Set(memkey, result.rows, sails.config.memcachedTTL);
+      } catch (ignore) { }
+
+      return result.rows;
     }
   },
 };
