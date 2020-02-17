@@ -5,6 +5,18 @@
  * @docs        :: http://sailsjs.org/documentation/concepts/models-and-orm/models
  */
 
+
+/* OJO: Uso la función buscar para obtener las inscripciones y por lo tanto
+        los registros no quedan con la sintaxis común de sails:
+
+        En lugar de ser:
+           inscripcion.DependId.DependDesc
+
+        queda como:
+           inscripcion.DependDesc
+*/
+
+
 module.exports = {
 
   datastore: 'Estudiantil',
@@ -60,7 +72,6 @@ module.exports = {
     if (!result || !result.rows[0]) {
       return undefined;
     }
-    sails.log("buscar", perId, planId, result.rows[0]);
 
     return result.rows[0];
   },

@@ -49,13 +49,16 @@ module.exports = {
     }
     cedula = cedula.replace(/[.,;-]/g,'');
 
-
     let viewdata = {
       title: "Inscripciones para Plan 1994<small> (turno nocturno)</small>",
       id: "paso1",
       mensaje: undefined,
       cedula: cedula,
+      persona: {},
+      ultimaInscripcion: {},
+      liceos: [],
     };
+
     try {
 
       viewdata.persona = await Personas.buscar('UY','CI',cedula);
@@ -72,14 +75,11 @@ module.exports = {
 			viewdata.liceos = listaLiceosConHorarios.filter(l => (l.DependId == 1003 /* || l.DependId == 1026 */));
 
 			if (viewdata.liceos.length == 0) {
-					throw new Error("En este momento no hay liceos habilitados para realizar inscripciones. Reintente luego");
+//					throw new Error("En este momento no hay liceos habilitados para realizar inscripciones. Reintente luego");
 			}
 
     } catch (e) {
       viewdata.mensaje = e.message;
-      viewdata.persona = {};
-      viewdata.ultimaInscripcion = {};
-			viewdata.liceos = [];
       sails.log.error(e.message);
     }
 

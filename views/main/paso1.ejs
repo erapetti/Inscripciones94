@@ -22,20 +22,20 @@
     <div class="card-body">
         <div class="form-group">
           <label for="cedula">Liceo</label>
-          <input type="text" class="form-control" id="liceo" value="<%= ultimaInscripcion.DependId ? ultimaInscripcion.DependId.DependDesc : '' %>" disabled="disabled">
+          <input type="text" class="form-control" id="liceo" value="<%= ultimaInscripcion.DependId ? ultimaInscripcion.DependDesc : '' %>" disabled="disabled">
           <label for="plan">Plan</label>
-          <input type="text" class="form-control" id="plan" value="<%= ultimaInscripcion.PlanId ? ultimaInscripcion.PlanId.PlanNombre : '' %>" disabled="disabled">
+          <input type="text" class="form-control" id="plan" value="<%= ultimaInscripcion.PlanId ? ultimaInscripcion.PlanNombre : '' %>" disabled="disabled">
           <label for="ciclo">Ciclo</label>
-          <input type="text" class="form-control" id="ciclo" value="<%= ultimaInscripcion.CicloId ? ultimaInscripcion.CicloId.CicloDesc : '' %>" disabled="disabled">
+          <input type="text" class="form-control" id="ciclo" value="<%= ultimaInscripcion.CicloId ? ultimaInscripcion.CicloDesc : '' %>" disabled="disabled">
           <label for="grado">Grado</label>
-          <input type="text" class="form-control" id="grado" value="<%= ultimaInscripcion.GradoId ? ultimaInscripcion.GradoId.GradoDesc : '' %>" disabled="disabled">
+          <input type="text" class="form-control" id="grado" value="<%= ultimaInscripcion.GradoId ? ultimaInscripcion.GradoDesc : '' %>" disabled="disabled">
 <% if (ultimaInscripcion.GradoId == 5) { %>
           <label for="orientacion">Orientación</label>
-          <input type="text" class="form-control" id="orientacion" value="<%= ultimaInscripcion.OrientacionId ? ultimaInscripcion.OrientacionId.OrientacionDesc : '' %>" disabled="disabled">
+          <input type="text" class="form-control" id="orientacion" value="<%= ultimaInscripcion.OrientacionId ? ultimaInscripcion.OrientacionDesc : '' %>" disabled="disabled">
 <% } %>
 <% if (ultimaInscripcion.GradoId == 6) { %>
           <label for="opcion">Opción</label>
-          <input type="text" class="form-control" id="opcion" value="<%= ultimaInscripcion.OpcionId ? ultimaInscripcion.OpcionId.OpcionDesc : '' %>" disabled="disabled">
+          <input type="text" class="form-control" id="opcion" value="<%= ultimaInscripcion.OpcionId ? ultimaInscripcion.OpcionDesc : '' %>" disabled="disabled">
 <% } %>
         </div>
     </div>
