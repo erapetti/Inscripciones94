@@ -18,9 +18,9 @@ module.exports = {
     const memkey = sails.config.prefix.vacantes+fechaInicioCurso+':'+dependId+':'+cupoPorMateria;
     try {
       const result = await sails.memcached.Get(memkey);
-      //if (typeof result === 'undefined') {
+      if (typeof result === 'undefined') {
         throw 'CACHE MISS';
-      //}
+      }
       return result;
 
     } catch(e) {

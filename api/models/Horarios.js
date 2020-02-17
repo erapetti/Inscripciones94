@@ -16,13 +16,13 @@ module.exports = {
 
   get: async function(dependId,fechaInicioCurso) {
 
-    const memkey = sails.config.prefix.horarias+dependId+':'+fechaInicioCurso;
+    const memkey = sails.config.prefix.horarios+dependId+':'+fechaInicioCurso;
     try {
 
       const result = await sails.memcached.Get(memkey);
-//      if (typeof result === 'undefined') {
+      if (typeof result === 'undefined') {
         throw 'CACHE MISS';
-//      }
+      }
       return result;
 
     } catch (e) {
@@ -30,7 +30,7 @@ module.exports = {
       const result = await this.getDatastore().sendNativeQuery(`
         select Curricula_Grado GradoId,
                Curricula_Orient OrientacionId,
-               Curricula_Opcion OpcionId,
+               Curricula_Opcion OpcionId,Curricula_Grado GradoId,
                AsignId,
                GrupoMateriaId GrupoMateriaId,
                concat(GrupoMateriaId,':',Curricula_Grado,':',Curricula_Orient,':',Curricula_Opcion) id,
@@ -56,11 +56,11 @@ module.exports = {
         join ASIGNATURAS_MATERIAS on MateriaId=GrupoMateriaMateriaId
         join MATERIAS USING (MateriaId)
         join CURRICULA C on CurriculaPlanId=LiceoPlanPlanId and CurriculaMateriaId=MateriaId and CurriculaTipoDictadoId=GrupoMateriaTipoDictadoId and C.TipoDuracionId=GM.TipoDuracionId
-        where GrupoMateriaHorarioFchDesde <= '2019-04-30'/* curdate() */
-          and GrupoMateriaHorarioFchHasta >= '2019-04-30'/* curdate() */
+        where GrupoMateriaHorarioFchDesde <= curdate() /* '2019-04-30' */
+          and GrupoMateriaHorarioFchHasta >= curdate() /* '2019-04-30' */
           and GrupoMateriaFchDesde >= $2
           and year(GrupoMateriaFchDesde) = year($2)
-          and GrupoMateriaFchhasta >= '2019-01-30'/* curdate() */
+          and GrupoMateriaFchhasta >= curdate() /* '2019-01-30' */
           and LiceoPlanTurnoHorarioActivo=1
           and (ifnull(HorarioFchDesde,'1000-01-01')='1000-01-01' or HorarioFchDesde <= $2)
           and (ifnull(HorarioFchHasta,'1000-01-01')='1000-01-01' or HorarioFchHasta >= $2)

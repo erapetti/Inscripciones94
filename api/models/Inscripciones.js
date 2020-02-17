@@ -40,6 +40,31 @@ module.exports = {
           InscriTurnoId: { type:'string', allowNull:true },
   },
 
+  buscar: async function(perId,planId) {
+    const result = await this.getDatastore().sendNativeQuery(`
+      select *
+      from INSCRIPCIONES
+      join Direcciones.DEPENDENCIAS using (DependId)
+      join PLANES using (PlanId)
+      join CICLOS using (CicloId)
+      join GRADOS using (GradoId)
+      join ORIENTACION using (OrientacionId)
+      join OPCION using (OpcionId)
+      where PerId = $1
+        and PlanId = $2
+        and EstadosInscriId < 5
+      order by FechaInicioCurso DESC, InscripcionId DESC
+      limit 1
+    `, [perId, planId]);
+
+    if (!result || !result.rows[0]) {
+      return undefined;
+    }
+    sails.log("buscar", perId, planId, result.rows[0]);
+
+    return result.rows[0];
+  },
+
   ultCurso: async function(perId) {
     const result = await this.getDatastore().sendNativeQuery(`
       select DependId, PlanId, CONCAT(PLANID,CICLOID,RIGHT(CONCAT('  ',GRADOID),2),RIGHT(CONCAT('  ',ORIENTACIONID),2),RIGHT(CONCAT('  ',OPCIONID),2)) UltCursoId
@@ -167,10 +192,10 @@ module.exports = {
       JOIN GRUPOMATERIA USING (GrupoMateriaId)
       JOIN ASIGNATURAS_MATERIAS USING (MateriaId)
       WHERE InscripcionId in (`+inscripciones.join(',')+`)
-        AND GrupoMateriaMateriaId=MateriaId
-        AND InscripcionGrupoCursoActivo=1
-        AND GrupoCursoMateriaActivo=1
-        AND GrupoMateriaFchHasta>'2019-04-01' -- curdate()
+        AND GrupoMateriaMateriaId = MateriaId
+        AND InscripcionGrupoCursoActivo = 1
+        AND GrupoCursoMateriaActivo = 1
+        AND GrupoMateriaFchHasta > curdate /* '2019-04-01' */
       `);
 
     if (!result || !result.rows) {

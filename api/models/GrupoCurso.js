@@ -31,9 +31,9 @@ module.exports = {
 
     try {
       const result = await sails.memcached.Get(memkey);
-//      if (typeof result === 'undefined') {
+      if (typeof result === 'undefined') {
         throw 'CACHE MISS';
-//      }
+      }
       return result;
 
     } catch (e) {

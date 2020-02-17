@@ -60,18 +60,16 @@ module.exports = {
 
       viewdata.persona = await Personas.buscar('UY','CI',cedula);
 
-      inscripciones = await Inscripciones.find({PerId:viewdata.persona.id, PlanId:14, EstadosInscriId:{'<':5}}).sort('FechaInicioCurso DESC').limit(1).populate('DependId').populate('PlanId').populate('CicloId').populate('GradoId').populate('OrientacionId').populate('OpcionId');
-      if (typeof inscripciones === "undefined" || typeof inscripciones[0] === "undefined") {
+      viewdata.ultimaInscripcion = await Inscripciones.buscar(viewdata.persona.id, 14);
+      if (!viewdata.ultimaInscripcion) {
         throw new Error("No tienes inscripciones previas en el Plan 1994. Debes realizar la inscripción personalmente en un liceo.");
       }
-
-      viewdata.ultimaInscripcion = inscripciones[0];
 
       const fechaHorarios = calcFechaHorarios();
 			const listaLiceosConHorarios = await Dependencias.liceosConHorarios(fechaHorarios, fechaHorarios);
 
 			// filtro liceos piloto
-			viewdata.liceos = listaLiceosConHorarios.filter(l => (l.DependId == 1003 || l.DependId == 1026));
+			viewdata.liceos = listaLiceosConHorarios.filter(l => (l.DependId == 1003 /* || l.DependId == 1026 */));
 
 			if (viewdata.liceos.length == 0) {
 					throw new Error("En este momento no hay liceos habilitados para realizar inscripciones. Reintente luego");
@@ -82,6 +80,7 @@ module.exports = {
       viewdata.persona = {};
       viewdata.ultimaInscripcion = {};
 			viewdata.liceos = [];
+      sails.log.error(e.message);
     }
 
     return res.view(viewdata);
@@ -134,6 +133,7 @@ module.exports = {
 
     } catch (e) {
       viewdata.mensaje = e.message;
+      sails.log.error(e.message);
     }
 
 		return res.view(viewdata);
@@ -196,6 +196,7 @@ module.exports = {
 
         const errores = validar(viewdata.misHorarios, viewdata.orientaciones, viewdata.opciones, viewdata.precisanPractico, viewdata.vacantes);
         if (errores.length) {
+          sails.log.info('Rollback perid=',perId,errores.join('; '));
           throw new Error(errores.join('<br>'));
         }
 
@@ -206,87 +207,7 @@ module.exports = {
 
     } catch (e) {
       viewdata.mensaje = e.message;
-    }
-
-    return res.view(viewdata);
-  },
-
-/*                               _
-                __ _ _ __  _   _| | __ _ _ __
-               / _` | '_ \| | | | |/ _` | '__|
-              | (_| | | | | |_| | | (_| | |
-               \__,_|_| |_|\__,_|_|\__,_|_|
-*/
-  anular: async function(req,res) {
-
-    const cedula = (req.param('cedula','') || '').checkFormat(/[\d.,;-]+/);
-    const gm = (req.param('gm') || '').checkFormat(/\d+/);
-
-    let resp = { error: '' };
-
-    if (!cedula || !gm) {
-      resp.error = 'Parámetros incorrectos';
-      return res.json(resp);
-    }
-
-    const fechaInicioCurso = calcFechaInicioCurso();
-
-    try {
-      Inscripciones.borrar(gm,cedula,fechaInicioCurso);
-
-    } catch (e) {
-      resp.error = e.message;
-    }
-
-    return res.json(resp);
-  },
-
-/*              _ _     _            _
-               | (_)___| |_ __ _  __| | ___
-               | | / __| __/ _` |/ _` |/ _ \
-               | | \__ \ || (_| | (_| | (_) |
-               |_|_|___/\__\__,_|\__,_|\___/
-*/
-  listado: async function(req,res) {
-
-    const cedula = (req.param('cedula','') || '').checkFormat(/[\d.,;-]+/);
-
-    if (!cedula) {
-      return res.redirect(sails.config.custom.basePath+'/');
-    }
-
-    let viewdata = {
-      title: "Inscripciones para Plan 1994<small> (turno nocturno)</small>",
-      id: "listado",
-      mensaje: undefined,
-      cedula: cedula,
-      misHorarios: [],
-    };
-
-    const fechaInicioCurso = calcFechaInicioCurso();
-
-    try {
-      const persona = await Personas.buscar('UY','CI',cedula);
-
-      viewdata.inscripciones = await AlumnosGrupoMateria.activas(persona.id, fechaInicioCurso);
-      if (!viewdata.inscripciones || viewdata.inscripciones.length==0) {
-        throw new Error("No se encontraron inscripciones activas");
-      }
-
-      let horarios = {};
-
-      // junto los horarios de las materias en las cuales está inscripto:
-      for (let i=0; i<viewdata.inscripciones.length; i++) {
-        const datosGM = viewdata.inscripciones[i];
-        if (typeof horarios[datosGM.DependId] === 'undefined') {
-          horarios[datosGM.DependId] = await Horarios.get(datosGM.DependId, fechaInicioCurso);
-        }
-
-        viewdata.misHorarios.push( horarios[datosGM.DependId].find(h => h.GrupoMateriaId==datosGM.GrupoMateriaId&& h.GradoId==datosGM.GradoId && (datosGM.GradoId==1 || datosGM.GradoId==2 && h.OrientacionId==datosGM.OrientacionId || datosGM.GradoId==3 && h.OpcionId==datosGM.OpcionId)) );
-      }
-
-    } catch (e) {
-      viewdata.mensaje = e.message;
+      sails.log.error(e.message);
     }
 
     return res.view(viewdata);
@@ -330,7 +251,7 @@ Date.prototype.fecha_ymd_toString = function() {
 // la fecha en que los horarios tienen que existir:
 function calcFechaHorarios() {
 	const mesActual = (new Date()).getMonth();
-	const anioActual = 2019; // (new Date()).getFullYear();
+	const anioActual = (new Date()).getFullYear(); //2019
 	const fechaHorarios = (mesActual < 4 ? anioActual+'-04-01' :
 													mesActual < 6 ? anioActual+'-'+mesActual+'01' :
 													 mesActual < 8 ? anioActual+'-08-01' :
@@ -341,7 +262,7 @@ function calcFechaHorarios() {
 };
 
 function calcFechaInicioCurso() {
-  const hoy = new Date('2019-01-30'); // new Date();
+  const hoy = new Date(); // new Date('2019-01-30');
   const fechaInicioCurso = (hoy.getMonth() < 5 ? hoy.getFullYear()+'-03-01' : (hoy.getMonth() < 10 ? hoy.getFullYear()+'-07-01' : (hoy.getFullYear()+1)+'-03-01'));
   return fechaInicioCurso;
 };
@@ -481,6 +402,7 @@ async function inscribir(dbh,perId,dependId,gm,fechaInicioCurso,datosUltCurso) {
       await InscripcionesGrupoCurso.agrego(dbh, gm[i].InscripcionId, grupoCursoId);
       await AlumnosGrupoMateria.agrego(dbh, gm[i].InscripcionId, horariosGM.MateriaId, horariosGM.GrupoMateriaId, grupoCursoId);
       nuevosHorarios.push( horariosGM );
+      sails.log.info('agrego inscripción',gm[i].InscripcionId, gm[i].MateriaId, grupoCursoId, horariosGM.GrupoMateriaId);
     } catch (e) {
       if (e.code !== 'E_UNIQUE') {
         throw(e);

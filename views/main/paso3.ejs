@@ -39,7 +39,7 @@ var misHorarios = <%- JSON.stringify(misHorarios) %>;
 
 <div class="alert alert-danger mt-3">
   <p>Esta solicitud de inscripción es válida por 2 días hábiles.<br>
-     Debes confirmarla en el liceo <%- dependDesc %> entre hoy y el <%- vencimiento %> en el horario de 19:30 a 23:00.<br>
+     Debes confirmarla en el liceo <%- dependDesc %> entre hoy y el <%- vencimiento %> en el horario de <%- sails.config.custom.horarioLiceo %>.<br>
      Pasada esa fecha otro estudiante puede ocupar tu lugar en las materias solicitadas.</p>
 </div>
 

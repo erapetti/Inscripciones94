@@ -11,6 +11,7 @@ module.exports = {
     dependDesc: 'I94::DD:',
     curricula: 'I94::CC:',
     precisanTeorico: 'I94::PT:',
+    precisanPractico: 'I94::PP',
     asignaturasPlan: 'I94::AP:',
     horarios: 'I94::H:',
     vacantes: 'I94::V:',

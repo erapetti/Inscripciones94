@@ -25,4 +25,5 @@ module.exports.custom = {
   maximoDiario: 400,
   minInscripcionId: 10000000,
   maxInscripcionId: 19999999,
+  horarioLiceo: '19:30 a 23:00',
 };
