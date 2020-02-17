@@ -15,7 +15,7 @@ module.exports = {
   },
 
   vacantes: async function(dependId,fechaInicioCurso,cupoPorMateria,cupoPorPractico) {
-    const memkey = sails.config.prefix.vacantes+fechaInicioCurso+':'+dependId+':'+cupoPorMateria;
+    const memkey = sails.config.prefix.vacantes+fechaInicioCurso+':'+dependId+':'+cupoPorMateria+':'+cupoPorPractico;
     try {
       const result = await sails.memcached.Get(memkey);
       if (typeof result === 'undefined') {
