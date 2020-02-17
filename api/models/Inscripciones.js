@@ -216,9 +216,9 @@ module.exports = {
   },
 
   recursa: async function(perId,planId,cicloId,gradoId,orientacionId,opcionId,fechaInicioCurso) {
-    const result = await this.findOne({EstadosInscriId:{'<':5},FechaInicioCurso:{'<':fechaInicioCurso},PerId:perId,PlanId:planId,CicloId:cicloId,GradoId:gradoId,OrientacionId:orientacionId,OpcionId:opcionId});
+    const result = await this.find({EstadosInscriId:{'<':5},FechaInicioCurso:{'<':fechaInicioCurso},PerId:perId,PlanId:planId,CicloId:cicloId,GradoId:gradoId,OrientacionId:orientacionId,OpcionId:opcionId});
 
-    return !!result;
+    return (result && result.rows && result.rows.length>0);
   },
 
   hechasHoy: async function() {
