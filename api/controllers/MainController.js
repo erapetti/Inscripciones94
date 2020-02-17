@@ -75,7 +75,7 @@ module.exports = {
 			viewdata.liceos = listaLiceosConHorarios.filter(l => (l.DependId == 1003 /* || l.DependId == 1026 */));
 
 			if (viewdata.liceos.length == 0) {
-//					throw new Error("En este momento no hay liceos habilitados para realizar inscripciones. Reintente luego");
+					throw new Error("En este momento no hay liceos habilitados para realizar inscripciones. Reintente luego");
 			}
 
     } catch (e) {
