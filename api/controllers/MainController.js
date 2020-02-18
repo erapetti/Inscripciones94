@@ -4,7 +4,7 @@
  * @description :: Server-side actions for handling incoming requests.
  * @help        :: See https://sailsjs.com/docs/concepts/actions
  *
- * Ascii art: http://www.network-science.de/ascii/ font:"standard", reflection:no, adjustement:center, stretch:no, width:60
+ * Ascii art: http://www.network-science.de/ascii/ font:'standard', reflection:no, adjustement:center, stretch:no, width:60
  */
 
 const util = require('util');
@@ -27,8 +27,8 @@ module.exports = {
   inicio: async function(req,res) {
 
     let viewdata = {
-      title: "Inscripciones para Plan 1994<small> (turno nocturno)</small>",
-      id: "inicio",
+      title: 'Inscripciones para Plan 1994<small> (turno nocturno)</small>',
+      id: 'inicio',
       vencimiento: calcFechaVencimiento().fecha_toString(),
     };
     return res.view(viewdata);
@@ -50,8 +50,8 @@ module.exports = {
     cedula = cedula.replace(/[.,;-]/g,'');
 
     let viewdata = {
-      title: "Inscripciones para Plan 1994<small> (turno nocturno)</small>",
-      id: "paso1",
+      title: 'Inscripciones para Plan 1994<small> (turno nocturno)</small>',
+      id: 'paso1',
       mensaje: undefined,
       cedula: cedula,
       persona: {},
@@ -66,7 +66,7 @@ module.exports = {
       viewdata.ultimaInscripcion = await Inscripciones.buscar(viewdata.persona.id, 14);
       if (!viewdata.ultimaInscripcion) {
         viewdata.ultimaInscripcion = {};
-        throw new Error("No tienes inscripciones previas en el Plan 1994. Debes realizar la inscripción personalmente en un liceo.");
+        throw new Error('No tienes inscripciones previas en el Plan 1994. Debes realizar la inscripción personalmente en un liceo.');
       }
 
       const fechaHorarios = calcFechaHorarios();
@@ -76,7 +76,7 @@ module.exports = {
 			viewdata.liceos = listaLiceosConHorarios.filter(l => (l.DependId == 1003 /* || l.DependId == 1026 */));
 
 			if (viewdata.liceos.length == 0) {
-					throw new Error("En este momento no hay liceos habilitados para realizar inscripciones. Reintente luego");
+					throw new Error('En este momento no hay liceos habilitados para realizar inscripciones. Reintente luego');
 			}
 
     } catch (e) {
@@ -107,8 +107,8 @@ module.exports = {
 		}
 
 		let viewdata = {
-			title: "Inscripciones para Plan 1994<small> (turno nocturno)</small>",
-      id: "paso2",
+			title: 'Inscripciones para Plan 1994<small> (turno nocturno)</small>',
+      id: 'paso2',
       mensaje: undefined,
 			cedula: cedula,
 			dependId: dependId,
@@ -160,8 +160,8 @@ module.exports = {
     }
 
     let viewdata = {
-      title: "Inscripciones para Plan 1994<small> (turno nocturno)</small>",
-      id: "paso3",
+      title: 'Inscripciones para Plan 1994<small> (turno nocturno)</small>',
+      id: 'paso3',
       mensaje: undefined,
       cedula: cedula,
       dependId: dependId,
@@ -233,20 +233,20 @@ String.prototype.checkFormat = function(regexp) {
 };
 
 Date.prototype.fechahora_toString = function() {
-  var sprintf = require("sprintf");
+  var sprintf = require('sprintf');
   var mes = Array('enero','febrero','marzo','abril','mayo','junio','julio','agosto','setiembre','octubre','noviembre','diciembre');
-  return sprintf("%d de %s de %d, %02d:%02d", this.getDate(),mes[this.getMonth()],this.getFullYear(),this.getHours(),this.getMinutes());
+  return sprintf('%d de %s de %d, %02d:%02d', this.getDate(),mes[this.getMonth()],this.getFullYear(),this.getHours(),this.getMinutes());
 };
 
 Date.prototype.fecha_toString = function() {
-  var sprintf = require("sprintf");
+  var sprintf = require('sprintf');
   var mes = Array('enero','febrero','marzo','abril','mayo','junio','julio','agosto','setiembre','octubre','noviembre','diciembre');
-  return sprintf("%d de %s de %d", this.getDate(),mes[this.getMonth()],this.getFullYear());
+  return sprintf('%d de %s de %d', this.getDate(),mes[this.getMonth()],this.getFullYear());
 };
 
 Date.prototype.fecha_ymd_toString = function() {
-        var sprintf = require("sprintf");
-        return sprintf("%04d-%02d-%02d", this.getFullYear(),this.getMonth()+1,this.getDate());
+        var sprintf = require('sprintf');
+        return sprintf('%04d-%02d-%02d', this.getFullYear(),this.getMonth()+1,this.getDate());
 };
 
 // la fecha en que los horarios tienen que existir:
@@ -376,7 +376,7 @@ async function inscribir(dbh,perId,dependId,gm,fechaInicioCurso,datosUltCurso) {
 
   let activas = await Inscripciones.activas(perId, fechaInicioCurso);
   if (!activas) {
-    throw new Error("No se pudo obtener la lista de tus inscripciones activas");
+    throw new Error('No se pudo obtener la lista de tus inscripciones activas');
   }
   // para cada grupoMateria solicitado lo agrego en INSCRIPCIONES si es necesario
   for (let i=0; i<gm.length; i++) {
@@ -399,7 +399,7 @@ async function inscribir(dbh,perId,dependId,gm,fechaInicioCurso,datosUltCurso) {
 
     const grupoCurso = (await GrupoCurso.buscar(gm[i].GrupoMateriaId))[0];
     if (!grupoCurso) {
-      throw new Error("Error de configuración del curso "+gm[i].GrupoMateriaId);
+      throw new Error('Error de configuración del curso '+gm[i].GrupoMateriaId);
     }
     const grupoCursoId = grupoCurso.id;
 
@@ -410,6 +410,7 @@ async function inscribir(dbh,perId,dependId,gm,fechaInicioCurso,datosUltCurso) {
       if (e.code !== 'E_UNIQUE') {
         throw(e);
       }
+      sails.log.error('E_UNIQUE','InscripcionId',gm[i].InscripcionId,'PerId',perId,'MateriaId',gm[i].MateriaId,'GrupoCursoId',grupoCursoId);
     }
 
     try {
@@ -418,7 +419,7 @@ async function inscribir(dbh,perId,dependId,gm,fechaInicioCurso,datosUltCurso) {
       horariosGM.InscripcionId = gm[i].InscripcionId;
       nuevosHorarios.push( horariosGM );
 
-      sails.log.info('agrego InscripcionId',gm[i].InscripcionId,"PerId",perId,"MateriaId",gm[i].MateriaId,"GrupoCursoId",grupoCursoId,"GrupoMateriaId",gm[i].GrupoMateriaId);
+      sails.log.info('agrego InscripcionId',gm[i].InscripcionId,'PerId',perId,'MateriaId',gm[i].MateriaId,'GrupoCursoId',grupoCursoId,'GrupoMateriaId',gm[i].GrupoMateriaId);
     } catch (e) {
       if (e.code !== 'E_UNIQUE') {
         throw(e);
@@ -441,7 +442,7 @@ async function buscarCrearInscripcion(dbh,dependId,perId,datosGM,fechaInicioCurs
     const recursa = await Inscripciones.recursa(perId,datosGM.PlanId,datosGM.CicloId,datosGM.GradoId,datosGM.OrientacionId,datosGM.OpcionId,fechaInicioCurso);
     const grupoCurso = (await GrupoCurso.buscar(grupoMateriaId))[0];
     if (!grupoCurso) {
-      throw new Error("Error de configuración del curso "+grupoMateriaId);
+      throw new Error('Error de configuración del curso '+grupoMateriaId);
     }
     const grupoCursoId = grupoCurso.id;
     inscripcionId = await Inscripciones.agrego(dbh, dependId, perId, grupoMateriaId, datosGM.GradoId, datosGM.OrientacionId, datosGM.OpcionId, fechaInicioCurso, datosUltCurso.DependId, datosUltCurso.PlanId, datosUltCurso.UltCursoId, recursa);
