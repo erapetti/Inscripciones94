@@ -40,7 +40,7 @@ module.exports = {
           InscriFecha: { type:'ref', columnType:'date' },
           DependidOrigen: { type:'number', allowNull:true },
           UltPlanId: { type:'number', allowNull:true },
-          UltCursoId: 'string',
+          UltCursoId: { type:'string', allowNull:true },
           TipoModalidadId: 'number',
           Semestre: 'number',
           InscriObservacion: 'string',
