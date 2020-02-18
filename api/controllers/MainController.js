@@ -373,7 +373,7 @@ async function inscribir(dbh,perId,dependId,gm,fechaInicioCurso,datosUltCurso) {
 
   let nuevosHorarios = [];
 
-  const activas = await Inscripciones.activas(perId, fechaInicioCurso);
+  let activas = await Inscripciones.activas(perId, fechaInicioCurso);
   if (!activas) {
     throw new Error("No se pudo obtener la lista de tus inscripciones activas");
   }
@@ -382,27 +382,31 @@ async function inscribir(dbh,perId,dependId,gm,fechaInicioCurso,datosUltCurso) {
   for (let i=0; i<gm.length; i++) {
 
     gm[i].InscripcionId = await buscarCrearInscripcion(dbh,dependId,perId,gm[i],fechaInicioCurso,datosUltCurso,activas);
-
-    const datosGM = gm[i];
+    gm[i].DependId = dependId;
 
     // preciso información adicional que la puedo sacar de la consulta de horarios:
-    let horariosGM = await Horarios.buscar(dependId, datosGM.GrupoMateriaId, datosGM.GradoId, datosGM.OrientacionId, datosGM.OpcionId, fechaInicioCurso);
-    horariosGM.InscripcionId = gm[i].InscripcionId;
+    let horariosGM = await Horarios.buscar(dependId, gm[i].GrupoMateriaId, gm[i].GradoId, gm[i].OrientacionId, gm[i].OpcionId, fechaInicioCurso);
     gm[i].MateriaId = horariosGM.MateriaId;
     gm[i].TipoDuracionId = horariosGM.TipoDuracionId;
 
-    const grupoCurso = (await GrupoCurso.buscar(datosGM.GrupoMateriaId))[0];
+    // agrego la inscripción a activas para poder reutilizarla en esta sesión
+    activas.push( gm[i] );
+
+    const grupoCurso = (await GrupoCurso.buscar(gm[i].GrupoMateriaId))[0];
     if (!grupoCurso) {
-      throw new Error("Error de configuración del curso "+datosGM.GrupoMateriaId);
+      throw new Error("Error de configuración del curso "+gm[i].GrupoMateriaId);
     }
     const grupoCursoId = grupoCurso.id;
 
     try {
       await InscripcionesMaterias.agrego(dbh, gm[i].InscripcionId, gm[i].MateriaId, gm[i].TipoDuracionId);
       await InscripcionesGrupoCurso.agrego(dbh, gm[i].InscripcionId, grupoCursoId);
-      await AlumnosGrupoMateria.agrego(dbh, gm[i].InscripcionId, horariosGM.MateriaId, horariosGM.GrupoMateriaId, grupoCursoId);
+      await AlumnosGrupoMateria.agrego(dbh, gm[i].InscripcionId, gm[i].MateriaId, gm[i].GrupoMateriaId, grupoCursoId);
+
+      horariosGM.InscripcionId = gm[i].InscripcionId;
       nuevosHorarios.push( horariosGM );
-      sails.log.info('agrego inscripción',gm[i].InscripcionId, gm[i].MateriaId, grupoCursoId, horariosGM.GrupoMateriaId);
+
+      sails.log.info('agrego inscripción',gm[i].InscripcionId, gm[i].MateriaId, grupoCursoId, gm[i].GrupoMateriaId);
     } catch (e) {
       if (e.code !== 'E_UNIQUE') {
         throw(e);
