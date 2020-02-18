@@ -71,7 +71,7 @@ module.exports = {
         }
 
         try {
-          await sails.memcached.Set(memkey, result.rows, sails.config.memcachedTTL);
+          await sails.memcached.Set(memkey, result.rows, sails.config.memcached15minTTL);
         } catch (ignore) { }
 
         return result.rows;

@@ -196,7 +196,7 @@ module.exports = {
 
         const errores = validar(viewdata.misHorarios, viewdata.orientaciones, viewdata.opciones, viewdata.precisanPractico, viewdata.vacantes);
         if (errores.length) {
-          sails.log.info('Rollback perid=',perId,errores.join('; '));
+          sails.log.info('Rollback PerId',perId,errores.join('; '));
           throw new Error(errores.join('<br>'));
         }
 
@@ -377,20 +377,24 @@ async function inscribir(dbh,perId,dependId,gm,fechaInicioCurso,datosUltCurso) {
   if (!activas) {
     throw new Error("No se pudo obtener la lista de tus inscripciones activas");
   }
-
   // para cada grupoMateria solicitado lo agrego en INSCRIPCIONES si es necesario
   for (let i=0; i<gm.length; i++) {
 
-    gm[i].InscripcionId = await buscarCrearInscripcion(dbh,dependId,perId,gm[i],fechaInicioCurso,datosUltCurso,activas);
+    gm[i].id = await buscarCrearInscripcion(dbh,dependId,perId,gm[i],fechaInicioCurso,datosUltCurso,activas);
+    gm[i].InscripcionId = gm[i].id;
     gm[i].DependId = dependId;
+    gm[i].PlanId = 14;
+    gm[i].CicloId = 2;
 
     // preciso información adicional que la puedo sacar de la consulta de horarios:
     let horariosGM = await Horarios.buscar(dependId, gm[i].GrupoMateriaId, gm[i].GradoId, gm[i].OrientacionId, gm[i].OpcionId, fechaInicioCurso);
     gm[i].MateriaId = horariosGM.MateriaId;
     gm[i].TipoDuracionId = horariosGM.TipoDuracionId;
 
-    // agrego la inscripción a activas para poder reutilizarla en esta sesión
-    activas.push( gm[i] );
+    if (!activas.find(a => a.id == gm[i].id)) {
+      // agrego la inscripción a activas para poder reutilizarla en esta sesión
+      activas.push( gm[i] );
+    }
 
     const grupoCurso = (await GrupoCurso.buscar(gm[i].GrupoMateriaId))[0];
     if (!grupoCurso) {
@@ -401,18 +405,25 @@ async function inscribir(dbh,perId,dependId,gm,fechaInicioCurso,datosUltCurso) {
     try {
       await InscripcionesMaterias.agrego(dbh, gm[i].InscripcionId, gm[i].MateriaId, gm[i].TipoDuracionId);
       await InscripcionesGrupoCurso.agrego(dbh, gm[i].InscripcionId, grupoCursoId);
-      await AlumnosGrupoMateria.agrego(dbh, gm[i].InscripcionId, gm[i].MateriaId, gm[i].GrupoMateriaId, grupoCursoId);
-
-      horariosGM.InscripcionId = gm[i].InscripcionId;
-      nuevosHorarios.push( horariosGM );
-
-      sails.log.info('agrego inscripción',gm[i].InscripcionId, gm[i].MateriaId, grupoCursoId, gm[i].GrupoMateriaId);
     } catch (e) {
       if (e.code !== 'E_UNIQUE') {
         throw(e);
       }
     }
-  };
+
+    try {
+      await AlumnosGrupoMateria.agrego(dbh, gm[i].InscripcionId, gm[i].MateriaId, gm[i].GrupoMateriaId, grupoCursoId);
+
+      horariosGM.InscripcionId = gm[i].InscripcionId;
+      nuevosHorarios.push( horariosGM );
+
+      sails.log.info('agrego InscripcionId',gm[i].InscripcionId,"MateriaId",gm[i].MateriaId,"GrupoCursoId",grupoCursoId,"GrupoMateriaId",gm[i].GrupoMateriaId);
+    } catch (e) {
+      if (e.code !== 'E_UNIQUE') {
+        throw(e);
+      }
+    }
+  } // end for
 
   return nuevosHorarios;
 };
