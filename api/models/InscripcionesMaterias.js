@@ -29,7 +29,7 @@ module.exports = {
       EstadosInscriIdMateria: 1,
     };
 
-    await this.create(inscripcionMateria).usingConnection(dbh);
+    await this.findOrCreate({id:inscripcionId,MateriaId:materiaId},inscripcionMateria).usingConnection(dbh);
     return;
   },
 

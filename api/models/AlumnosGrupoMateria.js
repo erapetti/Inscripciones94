@@ -27,7 +27,7 @@ module.exports = {
       GrupoCursoId: grupoCursoId,
       AlumnoGrupoMateriaActivo: 1,
     };
-    await this.create(alumnoGrupoMateria).usingConnection(dbh);
+    await this.findOrCreate({id:inscripcionId,MateriaId:materiaId,GrupoMateriaId:grupoMateriaId,GrupoCursoId:grupoCursoId},alumnoGrupoMateria).usingConnection(dbh);
     return;
   },
 

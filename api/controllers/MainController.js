@@ -101,7 +101,7 @@ module.exports = {
 		}
 		cedula = cedula.replace(/[.,;-]/g,'');
 
-		const dependId = req.param('dependid').checkFormat(/\d+/);
+		const dependId = req.param('dependid','').checkFormat(/\d+/);
 		if (!dependId) {
 			return res.redirect(sails.config.custom.basePath+'/');
 		}
@@ -148,11 +148,11 @@ module.exports = {
                 |_|
 */
   paso3: async function(req,res) {
-    const cedula = (req.param('cedula','') || '').checkFormat(/[\d.,;-]+/);
-    const dependId = (req.param('dependid') || '').checkFormat(/\d+/);
+    const cedula = req.param('cedula','').checkFormat(/[\d.,;-]+/);
+    const dependId = req.param('dependid','').checkFormat(/\d+/);
     let gm;
     try {
-      gm = JSON.parse((req.param('gm') || '').checkFormat(/[,\[\]\{\}:"'A-Za-z0-9]+/));
+      gm = JSON.parse( req.param('gm','').checkFormat(/[,\[\]\{\}:"'A-Za-z0-9]+/) );
     } catch(ignore) { }
 
     if (!cedula || !dependId || !gm) {
@@ -406,14 +406,6 @@ async function inscribir(dbh,perId,dependId,gm,fechaInicioCurso,datosUltCurso) {
     try {
       await InscripcionesMaterias.agrego(dbh, gm[i].InscripcionId, gm[i].MateriaId, gm[i].TipoDuracionId);
       await InscripcionesGrupoCurso.agrego(dbh, gm[i].InscripcionId, grupoCursoId);
-    } catch (e) {
-      if (e.code !== 'E_UNIQUE') {
-        throw(e);
-      }
-      sails.log.error('E_UNIQUE','InscripcionId',gm[i].InscripcionId,'PerId',perId,'MateriaId',gm[i].MateriaId,'GrupoCursoId',grupoCursoId);
-    }
-
-    try {
       await AlumnosGrupoMateria.agrego(dbh, gm[i].InscripcionId, gm[i].MateriaId, gm[i].GrupoMateriaId, grupoCursoId);
 
       horariosGM.InscripcionId = gm[i].InscripcionId;
@@ -421,9 +413,7 @@ async function inscribir(dbh,perId,dependId,gm,fechaInicioCurso,datosUltCurso) {
 
       sails.log.info('agrego InscripcionId',gm[i].InscripcionId,'PerId',perId,'MateriaId',gm[i].MateriaId,'GrupoCursoId',grupoCursoId,'GrupoMateriaId',gm[i].GrupoMateriaId);
     } catch (e) {
-      if (e.code !== 'E_UNIQUE') {
         throw(e);
-      }
     }
   } // end for
 
