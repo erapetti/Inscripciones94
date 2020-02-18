@@ -65,6 +65,7 @@ module.exports = {
 
       viewdata.ultimaInscripcion = await Inscripciones.buscar(viewdata.persona.id, 14);
       if (!viewdata.ultimaInscripcion) {
+        viewdata.ultimaInscripcion = {};
         throw new Error("No tienes inscripciones previas en el Plan 1994. Debes realizar la inscripción personalmente en un liceo.");
       }
 
