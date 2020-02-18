@@ -418,7 +418,7 @@ async function inscribir(dbh,perId,dependId,gm,fechaInicioCurso,datosUltCurso) {
       horariosGM.InscripcionId = gm[i].InscripcionId;
       nuevosHorarios.push( horariosGM );
 
-      sails.log.info('agrego InscripcionId',gm[i].InscripcionId,"MateriaId",gm[i].MateriaId,"GrupoCursoId",grupoCursoId,"GrupoMateriaId",gm[i].GrupoMateriaId);
+      sails.log.info('agrego InscripcionId',gm[i].InscripcionId,"PerId",perId,"MateriaId",gm[i].MateriaId,"GrupoCursoId",grupoCursoId,"GrupoMateriaId",gm[i].GrupoMateriaId);
     } catch (e) {
       if (e.code !== 'E_UNIQUE') {
         throw(e);
