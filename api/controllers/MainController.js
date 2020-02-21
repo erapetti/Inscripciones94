@@ -270,11 +270,11 @@ function calcFechaInicioCurso() {
 
 async function calcFechaVencimiento() {
   const hoy = new Date();
-  let dias = 2; // normalmente el vencimiento es dos días después
+  let dias = sails.config.custom.diasVencimiento; // normalmente el vencimiento es dos días después
   if (hoy.getDay()==6) {
-    dias = 3; // los sábados vence tres días después
+    dias++; // los sábados doy un día más por el domingo
   } else if (hoy.getDay()>=4) {
-    dias = 4; // los jueves y viernes vence cuatro días después
+    dias = dias + 2; // los jueves y viernes doy dos días más
   }
   // sumo un día por cada feriado
   const feriados = await Feriados.get(hoy.getFullYear(),null,null);

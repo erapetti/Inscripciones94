@@ -10,20 +10,12 @@
 
 module.exports.custom = {
 
-  /***************************************************************************
-  *                                                                          *
-  * Any other custom config this Sails app should use during development.    *
-  *                                                                          *
-  ***************************************************************************/
-  // mailgunDomain: 'transactional-mail.example.com',
-  // mailgunSecret: 'key-testkeyb183848139913858e8abd9a3',
-  // stripeSecret: 'sk_test_Zzd814nldl91104qor5911gjald',
-  // …
+  cupoPorMateria: 40, // máx. cantidad de alumnos por materia
+  cupoPorPractico: 20, // máx. cantidad de alumnos en los prácticos
+  maximoDiario: 400, // max. inscripciones diarias
+  minInscripcionId: 11000000,  // rango de InscripcionId
+  maxInscripcionId: 11999999,  // rango de InscripcionId
+  horarioLiceo: '19:30 a 23:00', // horario que se muestra en la página
+  diasVencimiento: 2,  // cantidad de días hasta el vencimiento de la inscripción
 
-  cupoPorMateria: 40,
-  cupoPorPractico: 20,
-  maximoDiario: 400,
-  minInscripcionId: 11000000,
-  maxInscripcionId: 11999999,
-  horarioLiceo: '19:30 a 23:00',
 };
