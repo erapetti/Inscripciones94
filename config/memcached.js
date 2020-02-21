@@ -18,6 +18,7 @@ module.exports = {
     grupoCursoMateria: 'I94::GCM:',
     grupoMateria: 'I94::GM:',
     hechasHoy: 'I94::HH:',
+    feriados: 'I94::F:',
   },
 
 };

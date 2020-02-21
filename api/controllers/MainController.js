@@ -29,7 +29,7 @@ module.exports = {
     let viewdata = {
       title: 'Inscripciones para Plan 1994<small> (turno nocturno)</small>',
       id: 'inicio',
-      vencimiento: calcFechaVencimiento().fecha_toString(),
+      vencimiento: (await calcFechaVencimiento()).fecha_toString(),
     };
     return res.view(viewdata);
   },
@@ -166,7 +166,7 @@ module.exports = {
       cedula: cedula,
       dependId: dependId,
       fecha: (new Date()).fechahora_toString(),
-      vencimiento: calcFechaVencimiento().fecha_toString(),
+      vencimiento: (await calcFechaVencimiento()).fecha_toString(),
       persona: {},
       dependDesc: '',
       asignaturas: [],
@@ -268,9 +268,23 @@ function calcFechaInicioCurso() {
   return fechaInicioCurso;
 };
 
-function calcFechaVencimiento() {
+async function calcFechaVencimiento() {
   const hoy = new Date();
-  return new Date(hoy.getTime() + 24*60*60*1000 * (hoy.getDay()==6 ? 3 : hoy.getDay()>=4 ? 4 : 2));
+  let dias = 2; // normalmente el vencimiento es dos días después
+  if (hoy.getDay()==6) {
+    dias = 3; // los sábados vence tres días después
+  } else if (hoy.getDay()>=4) {
+    dias = 4; // los jueves y viernes vence cuatro días después
+  }
+  // sumo un día por cada feriado
+  const feriados = await Feriados.get(hoy.getFullYear(),null,null);
+  for (let dia=1; dia<=dias; dia++) {
+    if (feriados.find(f => f.FeriadoFecha == new Date(hoy.getTime() + 24*60*60*1000 * dia).fecha_ymd_toString())) {
+      dias++;
+    }
+  }
+  const vencimiento = hoy.getTime() + 24*60*60*1000 * dias;
+  return new Date(vencimiento);
 };
 
 // tomado de paso2
