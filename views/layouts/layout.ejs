@@ -31,7 +31,10 @@
 
       <% if (typeof mensaje !== "undefined") { -%>
       <div class="alert alert-danger mt-5 w-75" role="alert"><%- mensaje %></div>
+
+        <% if (typeof onlyError === "undefined") { -%>
       <button onClick="window.location.href='<%= sails.config.custom.basePath %>/'" class="btn btn-primary">Volver al inicio</button>
+        <% } -%>
       <% } else { -%>
       <%- body %>
       <% } -%>
