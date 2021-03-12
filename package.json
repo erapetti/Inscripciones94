@@ -16,7 +16,7 @@
     "grunt": "1.0.4",
     "grunt-sync": "^0.8.1",
     "jquery": "^3.4.1",
-    "jspdf": "^1.5.3",
+    "jspdf": "^2.3.1",
     "knex": "^0.20.4",
     "memcached": "^2.2.2",
     "popper": "^1.0.1",
