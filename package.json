@@ -17,7 +17,7 @@
     "grunt-sync": "^0.8.1",
     "jquery": "^3.4.1",
     "jspdf": "^1.5.3",
-    "knex": "^0.20.4",
+    "knex": "^2.4.0",
     "memcached": "^2.2.2",
     "popper": "^1.0.1",
     "roboto-fontface": "^0.10.0",
